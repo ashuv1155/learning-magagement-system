@@ -1471,11 +1471,9 @@ async function loginWithGoogle(){
     localStorage.setItem("airt_active_user", found.code);
     adminAuthed = (found.role === 'Admin' || found.code.toLowerCase() === 'ashu');
 
-    // Sync progress if stored in profile
-    if(found.progress && typeof found.progress === 'object' && Object.keys(found.progress).length > 0){
-      S.c = Object.assign({}, S.c, found.progress);
-      save();
-    }
+    // Cleanly isolate progress for THIS specific student
+    S.c = Object.assign({}, (found.progress && typeof found.progress === 'object') ? found.progress : {});
+    save();
 
     toast(`Welcome, ${found.name}! Signed in with Google.`);
     location.hash = "#/";
@@ -1731,11 +1729,9 @@ function loginUser(e){
       adminAuthed=false;
     }
 
-    // Sync user progress into active state if present
-    if(found.progress&&typeof found.progress==='object'&&Object.keys(found.progress).length>0){
-      S.c=Object.assign({},S.c,found.progress);
-      save();
-    }
+    // Cleanly isolate progress for THIS specific student (never merge with prior session)
+    S.c = Object.assign({}, (found.progress && typeof found.progress === 'object') ? found.progress : {});
+    save();
 
     toast(`Welcome back, ${found.name}!`);
     location.hash="#/";
@@ -1749,6 +1745,9 @@ function logoutUser(){
   activeUserCode=null;
   adminAuthed=false;
   localStorage.removeItem("airt_active_user");
+  // Clean learning state on logout so next login is strictly isolated
+  S.c = {};
+  save();
   toast("Logged out successfully");
   location.hash="#/login";
   render();
