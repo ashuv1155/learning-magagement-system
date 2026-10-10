@@ -2,7 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5">
+<meta name="theme-color" content="#233F8F" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#11171C" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="format-detection" content="telephone=no">
 <title>AI Roadmap Tracker</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19,7 +24,7 @@
   --f-ui:"Bricolage Grotesque","Segoe UI",system-ui,-apple-system,sans-serif;
   --f-read:"Literata",Georgia,"Times New Roman",serif;
   --f-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
-  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+  box-sizing:border-box;
 }
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){--bg:#11171C;--surface:#1A2229;--surface2:#212A32;--ink:#E5EAEE;--muted:#93A1AC;--line:#2D3841;--brand:#8FA9F5;--brand-ink:#0E1620;--ok:#4CC38A;--warn:#E3A24A;--bad:#EF7B6E;--shadow:0 1px 2px rgba(0,0,0,.3),0 4px 16px rgba(0,0,0,.25)}
@@ -59,8 +64,9 @@ p{margin:0}
 .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
 .spread{justify-content:space-between}
 .grid{display:grid;gap:16px}
-.g2{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
-.g3{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.g2{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;box-shadow:var(--shadow)}
 .card h3{margin-bottom:10px}
 .btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:7px 13px;font-weight:550;transition:background .12s}
@@ -169,23 +175,77 @@ svg text{font-family:var(--f-ui);fill:var(--muted)}
 .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px}
 .menu-btn{display:none}
 
+/* Mobile-first touch & cross-browser adjustments */
+.side-backdrop{display:none;position:fixed;inset:0;background:rgba(10,16,22,.5);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);z-index:45}
+.side-backdrop.active{display:block}
+
+/* Prevent unwanted 300ms tap delay and iOS font boosting */
+button, a, input, select, textarea, .crow, .fc, summary {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Ensure smooth scrolling across Safari/WebKit */
+html, .drawer, .side, .tablewrap, .stepper {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Prevent iOS Safari auto-zooming on focus while keeping full readability */
+@media screen and (max-width: 768px) {
+  input[type=text], input[type=url], input[type=date], input[type=number], input[type=email], input[type=password], select, textarea {
+    font-size: 16px !important;
+  }
+}
+
 @media (max-width:860px){
   .app{grid-template-columns:1fr}
-  .side{position:fixed;left:0;top:0;bottom:0;width:280px;z-index:50;transform:translateX(-102%);transition:transform .2s;padding-top:calc(18px + env(safe-area-inset-top,0px))}
-  .side.open{transform:none;box-shadow:8px 0 30px rgba(0,0,0,.3)}
-  .topbar{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:env(safe-area-inset-top,0px);z-index:30}
-  .trail{grid-template-columns:repeat(4,1fr);row-gap:16px}
-  h1{font-size:1.6rem}.bigpct{font-size:2.6rem}
+  .side{
+    position:fixed;left:0;top:0;bottom:0;width:min(300px, 84vw);z-index:50;
+    transform:translateX(-105%);transition:transform .24s cubic-bezier(.16,1,.3,1);
+    padding-top:calc(18px + env(safe-area-inset-top,0px));
+    padding-bottom:calc(24px + env(safe-area-inset-bottom,0px));
+    box-shadow:none;
+  }
+  .side.open{transform:translateX(0);box-shadow:12px 0 40px rgba(0,0,0,.35)}
+  .topbar{
+    display:flex;align-items:center;gap:12px;
+    padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px;
+    background:var(--surface);border-bottom:1px solid var(--line);
+    position:sticky;top:0;z-index:30;
+  }
+  .topbar button.btn{min-height:38px;display:flex;align-items:center;justify-content:center}
+  .main{
+    padding:16px 14px calc(60px + env(safe-area-inset-bottom,0px));
+  }
+  .trail{grid-template-columns:repeat(4,1fr);row-gap:14px}
+  h1{font-size:1.55rem}.bigpct{font-size:2.5rem}
   .crow .meta{display:none}
+  .drawer{
+    width:100%;
+    padding:16px 16px calc(60px + env(safe-area-inset-bottom,0px));
+    padding-top:calc(16px + env(safe-area-inset-top,0px));
+  }
+  .seg-btns button{padding:10px 6px;min-height:42px}
+  .tablewrap{border-radius:8px;border:1px solid var(--line)}
 }
+
+@media (max-width:540px){
+  .trail{grid-template-columns:repeat(2,1fr);row-gap:12px}
+  .g2, .g3, .g4{grid-template-columns:1fr}
+  .stat b{font-size:1.45rem}
+  .row{gap:8px}
+  .banner{flex-direction:column;align-items:flex-start}
+}
+
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
+<div class="side-backdrop" id="sideBackdrop" onclick="toggleMobileNav(false)"></div>
 <div class="app">
   <aside class="side" id="side" aria-label="Navigation"></aside>
   <div>
-    <div class="topbar"><button class="btn sm" onclick="document.getElementById('side').classList.toggle('open')" aria-label="Open menu">Menu</button><b>AI Roadmap</b><button class="btn sm" style="margin-left:auto" onclick="palette()">Search</button></div>
+    <div class="topbar"><button class="btn sm" onclick="toggleMobileNav()" aria-label="Toggle navigation menu">☰ Menu</button><b>AI Roadmap</b><button class="btn sm" style="margin-left:auto" onclick="palette()">Search</button></div>
     <main class="main" id="main"></main>
   </div>
 </div>
@@ -1043,6 +1103,21 @@ function drawer(){
 
 /* ===== views ===== */
 let FILT={st:"",notes:false,due:false,low:false};
+
+function toggleMobileNav(forceState){
+  const side = document.getElementById("side");
+  const bd = document.getElementById("sideBackdrop");
+  if(!side) return;
+  const isOpen = (typeof forceState === "boolean") ? forceState : !side.classList.contains("open");
+  if(isOpen){
+    side.classList.add("open");
+    if(bd) bd.classList.add("active");
+  } else {
+    side.classList.remove("open");
+    if(bd) bd.classList.remove("active");
+  }
+}
+
 function sidebar(){
   const r=route();
   const cu=currentUser();
@@ -2525,7 +2600,7 @@ function render(){
     sidebar();
   }
 }
-window.addEventListener("hashchange",()=>{$("#side").classList.remove("open");window.scrollTo(0,0);Rv.idx=0;Rv.flip=false;resetStep=0;render()});
+window.addEventListener("hashchange",()=>{toggleMobileNav(false);window.scrollTo(0,0);Rv.idx=0;Rv.flip=false;resetStep=0;render()});
 document.addEventListener("keydown",e=>{
   if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="k"){e.preventDefault();palette();return}
   if(e.key==="Escape"){if(PAL)closePal();else if(openId)closeC();return}
