@@ -1063,6 +1063,7 @@ function sidebar(){
     ${ROADMAP.map(m=>`<a href="#/month/${m.n}" style="--c:${m.color}" ${r.p==="month"&&r.n===m.n?'aria-current="page"':""}><span class="dot"></span>${m.n}. ${esc(m.short)}<span class="pct">${Math.round(mprog(m.n).p*100)}%</span></a>`).join("")}
     <div class="sec">Review and reflect</div>
     <a href="#/revision" ${r.p==="revision"?'aria-current="page"':""}>Revision <span class="pct">${dueList().length+dueCards().length||""}</span></a>
+    <a href="#/report" ${r.p==="report"?'aria-current="page"':""}>My Learning Report 📊</a>
     <a href="#/leaderboard" ${r.p==="leaderboard"?'aria-current="page"':""}>Leaderboard 🏆</a>
     <a href="#/skills" ${r.p==="skills"?'aria-current="page"':""}>Skills checklist</a>
     <a href="#/analytics" ${r.p==="analytics"?'aria-current="page"':""}>Analytics</a>
@@ -1075,7 +1076,7 @@ function sidebar(){
 function route(){
   const h=location.hash.replace(/^#\/?/,"");const p=h.split("/");
   if(p[0]==="month"&&MON(+p[1]))return{p:"month",n:+p[1]};
-  if(["python","revision","skills","analytics","data","admin","login","leaderboard"].includes(p[0]))return{p:p[0]};
+  if(["python","revision","skills","analytics","data","admin","login","leaderboard","report"].includes(p[0]))return{p:p[0],id:p[1]};
   return{p:"home"};
 }
 function cycleTheme(){const o=["auto","light","dark"];S.set.theme=o[(o.indexOf(S.set.theme)+1)%3];applyTheme();save();toast("Theme: "+S.set.theme)}
@@ -1857,7 +1858,7 @@ let viewingReportUserId=null;
 
 function openStudentReport(id){
   viewingReportUserId=id;
-  render();
+  location.hash = "#/report/" + id;
 }
 
 function closeStudentReport(){
@@ -2342,6 +2343,155 @@ function palDraw(){
   $("#pr").innerHTML=PAL.res.length?PAL.res.map((c,i)=>`<li role="option" aria-selected="${i===PAL.sel}" onclick="closePal();openC('${c.id}')"><b>${esc(c.name)}</b> <span class="small muted">Month ${c.m} · ${esc(c.topic)}</span></li>`).join(""):`<li class="muted small">${$("#pq").value?"No matches. Try a different word.":"Type to search. Concepts due for review show here."}</li>`;
 }
 
+
+/* ===== Dedicated Individual Student Learning Report ===== */
+function studentReportView(targetUserId){
+  const users = getUsers();
+  const cu = currentUser();
+  if(!cu) return loginView();
+
+  let target = null;
+  // If admin specifies an id, or targetUserId passed
+  if(targetUserId){
+    target = users.find(u => u.id === targetUserId || u.code.toLowerCase() === targetUserId.toLowerCase());
+  } else if(cu.role === 'Admin' && viewingReportUserId){
+    target = users.find(u => u.id === viewingReportUserId);
+  }
+
+  // Regular students ALWAYS see only their OWN report
+  if(!target || (cu.role !== 'Admin' && cu.id !== target.id)){
+    target = cu;
+  }
+
+  // Progress is strictly isolated for this specific student
+  const p = target.progress || {};
+  const doneConcepts = ALL.filter(c => p[c.id] && p[c.id].st >= 2);
+  const learningConcepts = ALL.filter(c => p[c.id] && p[c.id].st === 1);
+  const notesConcepts = ALL.filter(c => p[c.id] && p[c.id].notes && p[c.id].notes.trim().length > 0);
+  const cardsCount = ALL.reduce((acc, c) => acc + ((p[c.id] && p[c.id].cards) ? p[c.id].cards.length : 0), 0);
+  const totalTimeSec = ALL.reduce((acc, c) => acc + ((p[c.id] && p[c.id].time) ? p[c.id].time : 0), 0);
+  const pct = ALL.length ? Math.round((doneConcepts.length / ALL.length) * 100) : 0;
+
+  // Month-by-month progress breakdown
+  const monthBreakdown = ROADMAP.map(m => {
+    const total = m.cs.length;
+    const completed = m.cs.filter(c => p[c.id] && p[c.id].st >= 2).length;
+    const inProg = m.cs.filter(c => p[c.id] && p[c.id].st === 1).length;
+    const mPct = total ? Math.round((completed / total) * 100) : 0;
+    return { n: m.n, title: m.title, short: m.short, color: m.color, total, completed, inProg, mPct };
+  });
+
+  return `
+  <div class="row spread" style="margin-bottom:16px;flex-wrap:wrap;gap:12px">
+    <div>
+      <div class="row" style="gap:10px">
+        <span style="font-size:2.2rem">📊</span>
+        <div>
+          <h1 style="margin:0">${cu.id === target.id ? 'My Personal Learning Report' : 'Student Learning Report: ' + esc(target.name)}</h1>
+          <p class="muted small">
+            Passcode: <code>${esc(target.code)}</code> · 
+            Email: ${esc(target.email || 'None')} · 
+            Status: <span class="pill ${target.status==='Active'?'s2':'due'}">${esc(target.status)}</span>
+            ${cu.role === 'Admin' && cu.id !== target.id ? '<span class="pill s3" style="margin-left:6px">Viewing as Admin</span>' : ''}
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="row" style="gap:8px">
+      ${cu.role === 'Admin' ? `
+        <select onchange="location.hash='#/report/'+this.value" style="width:auto;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:6px 10px;font-size:.88rem">
+          <option value="">Switch Student...</option>
+          ${users.map(u => `<option value="${u.id}" ${u.id===target.id?'selected':''}>${esc(u.name)} (${esc(u.code)})</option>`).join('')}
+        </select>
+        <a href="#/admin" class="btn sm">Admin Panel</a>
+      ` : ''}
+      <button class="btn sm" onclick="window.print()">🖨️ Print / Save PDF</button>
+      <a href="#/" class="btn sm primary">Back to Roadmap</a>
+    </div>
+  </div>
+
+  <div class="grid g4" style="margin-bottom:20px">
+    <div class="card stat">
+      <span class="muted small">Roadmap Completion</span>
+      <b style="color:var(--brand);font-size:2rem">${pct}%</b>
+      <span class="small muted">${doneConcepts.length} of ${ALL.length} topics understood</span>
+    </div>
+    <div class="card stat">
+      <span class="muted small">In Progress Topics</span>
+      <b style="font-size:2rem">${learningConcepts.length}</b>
+      <span class="small muted">Currently studying</span>
+    </div>
+    <div class="card stat">
+      <span class="muted small">Notes Written</span>
+      <b style="font-size:2rem">${notesConcepts.length}</b>
+      <span class="small muted">${cardsCount} flashcards created</span>
+    </div>
+    <div class="card stat">
+      <span class="muted small">Logged Study Time</span>
+      <b style="font-size:2rem">${hm(totalTimeSec)}</b>
+      <span class="small muted">${Math.round(totalTimeSec/60)} total minutes</span>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:20px">
+    <h3 style="margin-bottom:12px">Monthly Roadmap Progress Breakdown</h3>
+    <div class="grid g2" style="gap:16px">
+      ${monthBreakdown.map(m => `
+        <div style="background:var(--surface2);border-radius:8px;padding:12px;border-left:4px solid ${m.color}">
+          <div class="row spread" style="margin-bottom:6px">
+            <b>Month ${m.n}: ${esc(m.short)}</b>
+            <span class="small"><b>${m.mPct}%</b> (${m.completed}/${m.total})</span>
+          </div>
+          <div style="height:7px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden">
+            <div style="width:${m.mPct}%;height:100%;background:${m.color}"></div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  </div>
+
+  <div class="grid g2" style="align-items:start">
+    <div class="card">
+      <div class="row spread" style="margin-bottom:12px">
+        <h3 style="margin:0">Completed Topics (${doneConcepts.length})</h3>
+        <span class="pill sm s2">${doneConcepts.length} Done</span>
+      </div>
+      <div style="max-height:360px;overflow-y:auto;background:var(--surface2);border-radius:8px;padding:10px 14px">
+        ${doneConcepts.length ? doneConcepts.map(c => `
+          <div class="row spread small" style="padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.06)">
+            <div>
+              <span style="color:var(--brand);margin-right:6px">✓</span>
+              <b>${esc(c.name)}</b>
+              <div class="muted" style="font-size:.78rem">${esc(c.topic)}</div>
+            </div>
+            <span class="pill sm">Month ${c.m}</span>
+          </div>
+        `).join('') : '<p class="small muted" style="padding:10px 0">No topics marked as understood yet.</p>'}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row spread" style="margin-bottom:12px">
+        <h3 style="margin:0">Personal Study Notes (${notesConcepts.length})</h3>
+        <span class="pill sm s1">${notesConcepts.length} Notes</span>
+      </div>
+      <div style="max-height:360px;overflow-y:auto;background:var(--surface2);border-radius:8px;padding:10px 14px">
+        ${notesConcepts.length ? notesConcepts.map(c => `
+          <div style="padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.06)">
+            <div class="row spread small">
+              <b>${esc(c.name)}</b>
+              <span class="muted">Month ${c.m}</span>
+            </div>
+            <div class="small muted" style="margin-top:4px;font-style:italic;background:var(--surface);padding:6px 10px;border-radius:6px;border-left:3px solid var(--brand)">
+              "${esc(p[c.id].notes.slice(0, 140))}${p[c.id].notes.length > 140 ? '...' : ''}"
+            </div>
+          </div>
+        `).join('') : '<p class="small muted" style="padding:10px 0">No personal study notes recorded yet.</p>'}
+      </div>
+    </div>
+  </div>`;
+}
+
 /* ===== render + boot ===== */
 function render(){
   const r=route(),host=$("#main");let h="";
@@ -2360,6 +2510,7 @@ function render(){
     else if(r.p==="skills")h=skillsView();
     else if(r.p==="analytics")h=analyticsView();
     else if(r.p==="leaderboard")h=leaderboardView();
+    else if(r.p==="report")h=studentReportView(r.id);
     else if(r.p==="admin")h=adminView();
     else if(r.p==="login")h=loginView();
     else h=dataView();
