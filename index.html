@@ -1467,13 +1467,64 @@ async function loginWithGoogle(){
     render();
   } catch(err){
     console.error("Google Auth error:", err);
-    if(err.code === 'auth/popup-closed-by-user'){
+    if(err.code === 'auth/popup-blocked'){
+      toast("Popup blocked! Redirecting to Google...");
+      try {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        firebase.auth().signInWithRedirect(provider);
+      } catch(e){}
+    } else if(err.code === 'auth/popup-closed-by-user'){
       toast("Sign-in cancelled");
     } else if(err.code === 'auth/unauthorized-domain'){
-      toast("Domain not authorized in Firebase Console! See setup steps.");
+      toast("Please authorize this domain in Firebase Authentication settings!");
     } else {
-      toast("Google Sign-In error: " + (err.message || err.code));
+      toast("Google Sign-In: " + (err.message || err.code));
     }
+  }
+}
+
+function checkGoogleRedirectResult(){
+  if(typeof firebase !== "undefined" && firebase.auth && firebase.apps.length){
+    firebase.auth().getRedirectResult().then(result => {
+      if(result && result.user){
+        const gUser = result.user;
+        const users = getUsers();
+        const email = (gUser.email || "").toLowerCase().trim();
+        let found = users.find(u => u.email && u.email.toLowerCase().trim() === email);
+        if(!found){
+          const safeCode = (gUser.displayName || "student")
+            .toLowerCase()
+            .replace(/[^a-z0-9]/g, "")
+            .slice(0, 15) || ("user" + Date.now().toString().slice(-4));
+          let finalCode = safeCode;
+          let counter = 1;
+          while(users.some(u => u.code.toLowerCase() === finalCode.toLowerCase())){
+            finalCode = safeCode + counter;
+            counter++;
+          }
+          found = {
+            id: "u_g_" + gUser.uid,
+            name: gUser.displayName || "Google Learner",
+            email: email,
+            code: finalCode,
+            role: (email === "ashutosh@example.com" || finalCode === "ashu") ? "Admin" : "Student",
+            status: "Active",
+            photo: gUser.photoURL || null,
+            created: today(),
+            progress: {}
+          };
+          users.push(found);
+          persistUsers(users, true);
+        }
+        activeUserCode = found.code;
+        localStorage.setItem("airt_active_user", found.code);
+        adminAuthed = (found.role === 'Admin' || found.code.toLowerCase() === 'ashu');
+        location.hash = "#/";
+        render();
+      }
+    }).catch(err => {
+      console.warn("Redirect result error:", err);
+    });
   }
 }
 
@@ -2314,6 +2365,7 @@ window.addEventListener("storage",e=>{
 window.addEventListener("beforeunload",timerStop);
 applyTheme();
 initFirebase();
+checkGoogleRedirectResult();
 checkUrlInviteAndAutoLogin();
 render();
 </script></body></html>
