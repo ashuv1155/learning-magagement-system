@@ -1385,6 +1385,17 @@ function initFirebase(){
             }
           });
           persistUsers(local, false);
+
+          // If the logged-in user received updated progress from the cloud, sync into S.c
+          const cu = currentUser();
+          if(cu && cu.code){
+            const myCloudRecord = cloudUsers.find(u => u.code && u.code.toLowerCase() === cu.code.toLowerCase());
+            if(myCloudRecord && myCloudRecord.progress){
+              S.c = Object.assign({}, S.c, myCloudRecord.progress);
+              if(myCloudRecord.time) S.time = Object.assign({}, S.time, myCloudRecord.time);
+              save();
+            }
+          }
           render();
         }
       }
@@ -1739,11 +1750,31 @@ function logoutUser(){
   render();
 }
 
+let cloudSyncTimeout = null;
+
 function saveActiveUserProgress(){
-  const cu=currentUser();
-  if(cu){
-    cu.progress=Object.assign({},S.c);
-    save();
+  const cu = currentUser();
+  if(!cu) return;
+  cu.progress = Object.assign({}, S.c);
+  save();
+
+  // Real-time Cloud Sync to Firebase Firestore
+  if(fbDb && cu.code){
+    clearTimeout(cloudSyncTimeout);
+    cloudSyncTimeout = setTimeout(() => {
+      fbDb.collection("users").doc(cu.code.toLowerCase()).set({
+        progress: S.c,
+        time: S.time,
+        log: S.log,
+        lastActive: new Date().toISOString()
+      }, { merge: true })
+      .then(() => {
+        console.log("Learning progress synced to Cloud Firestore for", cu.code);
+      })
+      .catch(err => {
+        console.warn("Cloud progress sync error:", err);
+      });
+    }, 400);
   }
 }
 
