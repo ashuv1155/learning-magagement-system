@@ -1344,7 +1344,12 @@ let fbConnected = false;
 function getFirebaseConfig(){
   try {
     const raw = localStorage.getItem(FIREBASE_CONFIG_KEY);
-    if(raw) return JSON.parse(raw);
+    if(raw) {
+      const parsed = JSON.parse(raw);
+      if(parsed && parsed.apiKey && parsed.apiKey.startsWith("AIzaSy")) {
+        return parsed;
+      }
+    }
   } catch(e){}
   return DEFAULT_FIREBASE_CONFIG;
 }
@@ -1360,7 +1365,7 @@ function initFirebase(){
     }
     fbDb = firebase.firestore();
     fbConnected = true;
-    console.log("Firebase Cloud Firestore connected!");
+    console.log("Firebase Cloud Firestore connected with project:", cfg.projectId);
 
     // Listen to real-time student updates across all devices globally
     fbDb.collection("users").onSnapshot(snapshot => {
@@ -1371,16 +1376,15 @@ function initFirebase(){
         });
         if(cloudUsers.length > 0){
           const local = getUsers();
-          // Merge cloud users with local users
           cloudUsers.forEach(cu => {
-            const idx = local.findIndex(l => l.code.toLowerCase() === cu.code.toLowerCase());
+            const idx = local.findIndex(l => l.code && cu.code && l.code.toLowerCase() === cu.code.toLowerCase());
             if(idx !== -1){
               local[idx] = Object.assign({}, local[idx], cu);
             } else {
               local.push(cu);
             }
           });
-          persistUsers(local, false); // persist locally without re-uploading
+          persistUsers(local, false);
           render();
         }
       }
@@ -1395,17 +1399,16 @@ function initFirebase(){
 
 async function loginWithGoogle(){
   const cfg = getFirebaseConfig();
-  if(!cfg || !cfg.apiKey){
-    toast("Firebase is not connected yet. Paste config in Admin Panel or use passcode.");
-    return;
+  if(!firebase.apps.length){
+    try {
+      firebase.initializeApp(cfg);
+    } catch(e){}
   }
-  if(!firebase.auth){
-    toast("Firebase Auth is loading. Please try again.");
-    return;
-  }
+  const auth = firebase.auth();
   try {
     const provider = new firebase.auth.GoogleAuthProvider();
-    const result = await firebase.auth().signInWithPopup(provider);
+    provider.setCustomParameters({ prompt: 'select_account' });
+    const result = await auth.signInWithPopup(provider);
     const gUser = result.user;
     if(!gUser){return;}
 
