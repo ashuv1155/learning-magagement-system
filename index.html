@@ -1,0 +1,2316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AI Roadmap Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Literata:opsz,wght@7..72,400..700&display=swap" rel="stylesheet">
+<!-- Firebase App, Auth and Firestore (compat mode for robust static web app support) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<style>
+:root{
+  --bg:#EEF1EF;--surface:#FFFFFF;--surface2:#F6F8F7;--ink:#17222C;--muted:#586670;--line:#D6DCD9;
+  --brand:#233F8F;--brand-ink:#FFFFFF;--ok:#1E8E5A;--warn:#B8741A;--bad:#C0392B;
+  --shadow:0 1px 2px rgba(20,30,40,.06),0 4px 16px rgba(20,30,40,.05);
+  --f-ui:"Bricolage Grotesque","Segoe UI",system-ui,-apple-system,sans-serif;
+  --f-read:"Literata",Georgia,"Times New Roman",serif;
+  --f-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){--bg:#11171C;--surface:#1A2229;--surface2:#212A32;--ink:#E5EAEE;--muted:#93A1AC;--line:#2D3841;--brand:#8FA9F5;--brand-ink:#0E1620;--ok:#4CC38A;--warn:#E3A24A;--bad:#EF7B6E;--shadow:0 1px 2px rgba(0,0,0,.3),0 4px 16px rgba(0,0,0,.25)}
+}
+:root[data-theme="dark"]{--bg:#11171C;--surface:#1A2229;--surface2:#212A32;--ink:#E5EAEE;--muted:#93A1AC;--line:#2D3841;--brand:#8FA9F5;--brand-ink:#0E1620;--ok:#4CC38A;--warn:#E3A24A;--bad:#EF7B6E;--shadow:0 1px 2px rgba(0,0,0,.3),0 4px 16px rgba(0,0,0,.25)}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:15px;line-height:1.5}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:var(--brand)}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px;border-radius:4px}
+h1,h2,h3,h4{font-family:var(--f-ui);margin:0;line-height:1.2;letter-spacing:-.01em}
+h1{font-size:2rem;font-weight:700}h2{font-size:1.35rem;font-weight:650}h3{font-size:1.05rem;font-weight:650}
+p{margin:0}
+.read{font-family:var(--f-read);line-height:1.6}
+.muted{color:var(--muted)}.small{font-size:.85rem}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* shell */
+.app{display:grid;grid-template-columns:268px 1fr;min-height:100vh}
+.app.no-side{grid-template-columns:1fr}
+.app.no-side .side{display:none!important}
+.app.no-side .topbar{display:none!important}
+.app.no-side .main{max-width:680px;margin:0 auto;display:flex;flex-direction:column;justify-content:center;min-height:90vh;padding:24px 16px}
+.side{position:sticky;top:0;align-self:start;height:100vh;overflow:auto;background:var(--surface);border-right:1px solid var(--line);padding:18px 14px 24px;display:flex;flex-direction:column;gap:6px}
+.brand{font-weight:700;font-size:1.1rem;padding:4px 8px 12px;display:flex;align-items:center;gap:10px}
+.brand i{width:26px;height:26px;border-radius:7px;background:conic-gradient(#3E6FD9,#1F9D8A,#D9822B,#C9483F,#8A5CD1,#3F9A3F,#D1578A,#A68A1F,#3E6FD9)}
+.nav a{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;text-decoration:none;color:var(--ink);font-weight:500}
+.nav a:hover{background:var(--surface2)}
+.nav a[aria-current="page"]{background:var(--surface2);box-shadow:inset 3px 0 0 var(--c,var(--brand));font-weight:650}
+.nav .dot{width:10px;height:10px;border-radius:50%;background:var(--c);flex:none}
+.nav .pct{margin-left:auto;font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.nav .sec{font-size:.8rem;color:var(--muted);padding:12px 10px 4px;font-weight:600}
+.main{padding:28px clamp(16px,4vw,48px) 80px;max-width:1180px;width:100%}
+.topbar{display:none}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.spread{justify-content:space-between}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;box-shadow:var(--shadow)}
+.card h3{margin-bottom:10px}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:7px 13px;font-weight:550;transition:background .12s}
+.btn:hover{background:var(--surface2)}
+.btn.primary{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.sm{padding:4px 9px;font-size:.85rem}
+.btn.danger{color:var(--bad);border-color:var(--bad)}
+input[type=text],input[type=url],input[type=date],input[type=number],select,textarea{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+textarea{resize:vertical;min-height:110px;line-height:1.55}
+textarea.read,.read textarea{font-family:var(--f-read)}
+.pill{display:inline-block;border-radius:999px;padding:1px 10px;font-size:.78rem;font-weight:600;border:1px solid var(--line);background:var(--surface2);white-space:nowrap}
+.pill.s1{color:var(--warn);border-color:var(--warn)}.pill.s2{color:var(--ok);border-color:var(--ok)}
+.pill.s3{background:var(--ok);color:#fff;border-color:var(--ok)}
+.pill.due{color:var(--bad);border-color:var(--bad)}
+.bar{height:8px;border-radius:99px;background:var(--surface2);border:1px solid var(--line);overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--c,var(--brand));border-radius:99px;transition:width .35s}
+.banner{border:1px solid var(--warn);background:color-mix(in srgb,var(--warn) 10%,var(--surface));border-radius:10px;padding:10px 14px;margin-bottom:16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+
+/* trail hero */
+.hero h1{max-width:20ch}
+.trail{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin:22px 0 6px}
+.seg{position:relative;text-decoration:none;color:var(--ink);display:block}
+.seg .track{height:14px;border-radius:7px;background:var(--surface);border:1px solid var(--line);overflow:hidden}
+.seg .track i{display:block;height:100%;background:var(--c);transition:width .4s}
+.seg .lbl{font-size:.78rem;margin-top:6px;line-height:1.25;color:var(--muted)}
+.seg .num{font-weight:700;color:var(--c);font-size:.95rem}
+.seg.here::after{content:"";position:absolute;left:50%;top:-9px;width:0;height:0;border:6px solid transparent;border-top-color:var(--ink);transform:translateX(-50%)}
+.seg:hover .lbl{color:var(--ink)}
+.bigpct{font-size:3.4rem;font-weight:750;letter-spacing:-.03em;line-height:1}
+.stat{display:flex;flex-direction:column;gap:2px}
+.stat b{font-size:1.7rem;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.heat{display:grid;grid-auto-flow:column;grid-template-rows:repeat(7,14px);grid-auto-columns:14px;gap:3px;overflow-x:auto;padding-bottom:4px}
+.heat i{width:14px;height:14px;border-radius:3px;background:var(--surface2);border:1px solid var(--line)}
+.heat i.l1{background:color-mix(in srgb,var(--ok) 28%,var(--surface))}.heat i.l2{background:color-mix(in srgb,var(--ok) 55%,var(--surface))}.heat i.l3{background:color-mix(in srgb,var(--ok) 80%,var(--surface))}.heat i.l4{background:var(--ok)}
+.mcard{display:block;text-decoration:none;color:inherit;border-top:5px solid var(--c)}
+.mcard:hover{transform:translateY(-1px)}
+.mcard .t{font-weight:650;font-size:1.05rem}
+
+/* month page */
+.stepper{display:flex;gap:0;overflow-x:auto;margin:14px 0 22px;padding-bottom:6px}
+.step{flex:1 0 150px;padding:10px 12px;border:1px solid var(--line);background:var(--surface);margin-left:-1px}
+.step:first-child{border-radius:10px 0 0 10px;margin-left:0}.step:last-child{border-radius:0 10px 10px 0}
+.step .sn{font-weight:650;font-size:.88rem;line-height:1.25;min-height:2.2em}
+.step .bar{margin-top:8px;height:6px}
+details.topic{background:var(--surface);border:1px solid var(--line);border-radius:12px;margin-bottom:12px;overflow:hidden}
+details.topic>summary{list-style:none;cursor:pointer;padding:14px 16px;display:flex;gap:12px;align-items:center;font-weight:650}
+details.topic>summary::-webkit-details-marker{display:none}
+details.topic>summary::before{content:"▸";color:var(--muted);transition:transform .15s}
+details.topic[open]>summary::before{transform:rotate(90deg)}
+details.topic>summary .cnt{margin-left:auto;font-weight:500;color:var(--muted);font-size:.85rem}
+.crow{display:flex;gap:12px;align-items:flex-start;padding:11px 16px;border-top:1px solid var(--line);cursor:pointer}
+.crow:hover{background:var(--surface2)}
+.crow .cb{flex:none;width:22px;height:22px;border-radius:6px;border:2px solid var(--line);background:var(--surface);display:grid;place-items:center;margin-top:1px;font-size:14px;line-height:1;color:#fff}
+.crow .cb[aria-checked="true"]{background:var(--c);border-color:var(--c)}
+.crow .nm{font-weight:600}
+.crow .ds{font-family:var(--f-read);font-size:.88rem;color:var(--muted);line-height:1.45;margin-top:1px}
+.crow .meta{margin-left:auto;display:flex;gap:6px;align-items:center;flex:none;padding-left:8px}
+table{border-collapse:collapse;width:100%}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.85rem;color:var(--muted);font-weight:600}
+.tablewrap{overflow-x:auto}
+.check{display:flex;gap:10px;align-items:flex-start}
+.check input[type=checkbox]{width:18px;height:18px;margin-top:3px;accent-color:var(--c,var(--brand));flex:none}
+
+/* drawer */
+.scrim{position:fixed;inset:0;background:rgba(10,16,22,.45);z-index:40}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(720px,100%);background:var(--bg);z-index:41;overflow:auto;box-shadow:-8px 0 32px rgba(0,0,0,.25);padding:20px clamp(14px,3vw,28px) 60px;padding-top:calc(20px + env(safe-area-inset-top,0px));animation:slidein .18s ease-out}
+@keyframes slidein{from{transform:translateX(30px);opacity:.4}to{transform:none;opacity:1}}
+.drawer section{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;margin-top:14px}
+.drawer section h4{font-size:.95rem;margin-bottom:8px;font-weight:650}
+.seg-btns{display:flex;border:1px solid var(--line);border-radius:99px;overflow:hidden;background:var(--surface)}
+.seg-btns button{flex:1;border:0;background:none;padding:8px 6px;font-weight:550;border-right:1px solid var(--line)}
+.seg-btns button:last-child{border-right:0}
+.seg-btns button[aria-pressed="true"]{background:var(--c);color:#fff}
+.stars button{background:none;border:0;font-size:1.5rem;line-height:1;padding:2px;color:var(--line)}
+.stars button.on{color:#E0A526}
+.preview{border:1px solid var(--line);border-radius:8px;padding:10px 14px;background:var(--surface2);min-height:110px;font-family:var(--f-read)}
+.preview h1,.preview h2,.preview h3{margin:.6em 0 .3em}.preview h1{font-size:1.3rem}.preview h2{font-size:1.15rem}.preview h3{font-size:1.02rem}
+.preview p{margin:.5em 0}.preview ul{margin:.4em 0;padding-left:1.3em}
+.preview code{font-family:var(--f-mono);background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:0 4px;font-size:.88em}
+.preview pre{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px;overflow:auto}.preview pre code{border:0;padding:0}
+.math{font-family:var(--f-mono);color:var(--brand)}
+.snip{border:1px solid var(--line);border-radius:8px;margin-top:8px;overflow:hidden}
+.snip header{display:flex;justify-content:space-between;align-items:center;padding:5px 10px;background:var(--surface2);font-size:.82rem}
+.snip pre{margin:0;padding:10px;overflow:auto;font-family:var(--f-mono);font-size:.84rem}
+.item{display:flex;gap:10px;align-items:center;padding:6px 0;border-bottom:1px dashed var(--line)}
+.item:last-child{border-bottom:0}.item .grow{flex:1;min-width:0;overflow-wrap:anywhere}
+.timer{font-variant-numeric:tabular-nums;font-weight:650;font-size:1.1rem}
+
+/* flashcards */
+.fc{min-height:240px;display:grid;place-items:center;text-align:center;padding:28px;font-family:var(--f-read);font-size:1.25rem;cursor:pointer;border-radius:14px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow)}
+.fc.back{background:var(--surface2)}
+
+/* palette */
+.pal{position:fixed;left:50%;top:12vh;transform:translateX(-50%);width:min(620px,94vw);background:var(--surface);border:1px solid var(--line);border-radius:14px;z-index:60;box-shadow:0 20px 60px rgba(0,0,0,.35);overflow:hidden}
+.pal input{border:0;border-bottom:1px solid var(--line);border-radius:0;padding:14px 16px;font-size:1.05rem}
+.pal ul{list-style:none;margin:0;padding:6px;max-height:50vh;overflow:auto}
+.pal li{padding:8px 10px;border-radius:8px;cursor:pointer}
+.pal li[aria-selected="true"]{background:var(--surface2)}
+.toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:99px;z-index:80;font-weight:550}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.filters select,.filters input{width:auto}
+svg text{font-family:var(--f-ui);fill:var(--muted)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.85rem;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px}
+.menu-btn{display:none}
+
+@media (max-width:860px){
+  .app{grid-template-columns:1fr}
+  .side{position:fixed;left:0;top:0;bottom:0;width:280px;z-index:50;transform:translateX(-102%);transition:transform .2s;padding-top:calc(18px + env(safe-area-inset-top,0px))}
+  .side.open{transform:none;box-shadow:8px 0 30px rgba(0,0,0,.3)}
+  .topbar{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:env(safe-area-inset-top,0px);z-index:30}
+  .trail{grid-template-columns:repeat(4,1fr);row-gap:16px}
+  h1{font-size:1.6rem}.bigpct{font-size:2.6rem}
+  .crow .meta{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side" id="side" aria-label="Navigation"></aside>
+  <div>
+    <div class="topbar"><button class="btn sm" onclick="document.getElementById('side').classList.toggle('open')" aria-label="Open menu">Menu</button><b>AI Roadmap</b><button class="btn sm" style="margin-left:auto" onclick="palette()">Search</button></div>
+    <main class="main" id="main"></main>
+  </div>
+</div>
+<div id="drawer"></div>
+<script>
+const ROADMAP = [
+{n:1,title:"Linear Algebra for AI",short:"Linear algebra",color:"#3E6FD9",
+outcome:"Build the mathematical intuition needed to understand data representations, similarity, transformations, optimization, and dimensionality reduction.",
+src:["NumPy: Linear algebra (numpy.linalg)","https://numpy.org/doc/stable/reference/routines.linalg.html"],
+stages:[
+["Representing Data","Scalars|Vectors|Matrices|Tensors|Shape and dimensions"],
+["Vector Operations","Addition and subtraction|Scalar multiplication|Dot product|Element-wise product|Linear combinations"],
+["Matrix Operations and Transformations","Matrix addition and scaling|Matrix multiplication|Transpose|Identity matrix|Inverse and pseudo-inverse|Linear transformations|Systems of linear equations"],
+["Vector Spaces and Geometry","Span|Linear independence|Basis|Rank|Norms|Distance|Cosine similarity|Orthogonality|Projection"],
+["Decomposition and Dimensionality","Eigenvalues and eigenvectors|Singular Value Decomposition|PCA intuition|Covariance matrix"],
+["Essential Supporting Mathematics","Functions and slopes|Partial derivatives|Gradient|Chain rule|Mean and variance|Probability basics"]],
+topics:[
+["Representing Data",[
+["Scalars","Understand a scalar as a single numerical value such as a weight, loss, or learning rate."],
+["Vectors","Understand a vector as an ordered list that can represent features, parameters, or embeddings."],
+["Matrices","Understand a matrix as a two-dimensional arrangement used for datasets, weights, and transformations."],
+["Tensors","Understand tensors as multidimensional arrays that generalize scalars, vectors, and matrices."],
+["Shape and dimensions","Read array shapes correctly and identify samples, features, channels, batches, and sequence dimensions."]]],
+["Vector Operations",[
+["Addition and subtraction","Understand element-wise vector operations and the requirement for compatible dimensions."],
+["Scalar multiplication","Understand how scaling changes a vector's magnitude while preserving or reversing its direction."],
+["Dot product","Interpret the dot product as both a weighted sum and a measure related to directional alignment."],
+["Element-wise product","Distinguish element-wise multiplication from a dot product or matrix multiplication."],
+["Linear combinations","Understand how weighted sums of vectors construct new points, features, and model outputs."]]],
+["Matrix Operations and Transformations",[
+["Matrix addition and scaling","Apply element-wise matrix operations while tracking shape compatibility."],
+["Matrix multiplication","Understand row-by-column multiplication, shape rules, and why order usually matters."],
+["Transpose","Understand how transposition swaps axes and supports dot products, covariance, and gradient calculations."],
+["Identity matrix","Recognize the identity matrix as the matrix equivalent of multiplying by one."],
+["Inverse and pseudo-inverse","Understand what an inverse represents and why numerical methods often avoid computing it directly."],
+["Linear transformations","See matrices as functions that rotate, scale, reflect, project, or combine coordinates."],
+["Systems of linear equations","Connect matrix equations to finding unknown parameters and recognize unique, absent, or multiple solutions."]]],
+["Vector Spaces and Geometry",[
+["Span","Understand the set of all vectors reachable through linear combinations of given vectors."],
+["Linear independence","Recognize when no vector in a set can be recreated from the others."],
+["Basis","Understand a basis as a minimal independent coordinate system for a vector space."],
+["Rank","Use rank to reason about independent information, redundancy, and transform dimensionality."],
+["Norms","Interpret L1 and L2 norms as measures of vector size and connect them to regularization."],
+["Distance","Understand Euclidean and Manhattan distance and how scale affects distance-based methods."],
+["Cosine similarity","Measure orientation-based similarity between vectors, especially embeddings and documents."],
+["Orthogonality","Understand perpendicular vectors, zero dot products, and independent directions."],
+["Projection","Understand how a vector is mapped onto another vector or lower-dimensional subspace."]]],
+["Decomposition and Dimensionality",[
+["Eigenvalues and eigenvectors","Understand invariant directions and their scaling under a matrix transformation."],
+["Singular Value Decomposition","Understand SVD as a factorization that exposes important directions and strengths in a matrix."],
+["PCA intuition","Connect variance-maximizing directions to dimensionality reduction without deriving the full algorithm."],
+["Covariance matrix","Understand how covariance records how pairs of features vary together."]]],
+["Essential Supporting Mathematics",[
+["Functions and slopes","Interpret a function as an input-output relationship and a derivative as local rate of change."],
+["Partial derivatives","Understand how an output changes with respect to one input while other inputs are held fixed."],
+["Gradient","Understand the gradient as the direction of steepest increase across many parameters."],
+["Chain rule","Understand how derivatives propagate through composed operations in neural networks."],
+["Mean and variance","Use mean to describe center and variance to describe spread in data or model outputs."],
+["Probability basics","Understand events, conditional probability, distributions, and expected value at an intuitive level."]]]],
+tools:[
+["NumPy arrays","Create vectors and matrices and inspect their dimensions, data types, and shapes."],
+["numpy.linalg","Practice norms, matrix rank, solving linear systems, eigen decomposition, and SVD."],
+["Jupyter Notebook","Use small executable examples to connect symbolic notation with numerical results."]],
+checks:[
+"Represent a small tabular dataset as a matrix and explain what each axis means.",
+"Compute dot products, cosine similarity, rank, eigenvalues, and SVD for small NumPy arrays and interpret the outputs."]},
+
+{n:2,title:"Machine Learning",short:"Machine learning",color:"#1F9D8A",
+outcome:"Understand the complete classical ML workflow and make sound choices about data, algorithms, validation, metrics, and generalization.",
+src:["scikit-learn: User Guide","https://scikit-learn.org/stable/user_guide.html"],
+stages:[
+["Foundations and Workflow","Artificial intelligence, ML, and deep learning|Samples, features, and targets|Supervised learning|Unsupervised learning|Problem framing|Baseline|End-to-end workflow"],
+["Data Preparation and Features","Exploratory data analysis|Missing values|Categorical encoding|Feature scaling|Outliers|Feature engineering|Feature selection|Class imbalance|Data leakage|Preprocessing pipelines"],
+["Regression","Regression objective|Linear regression|Polynomial features|Ridge and Lasso|Regression metrics"],
+["Classification","Classification objective|Logistic regression|k-Nearest Neighbors|Naive Bayes|Decision trees|Random forests|Gradient boosting|Support Vector Machines|Decision thresholds|Classification metrics"],
+["Clustering and Dimensionality Reduction","Clustering objective|K-means|Hierarchical clustering|DBSCAN|Clustering evaluation|Principal Component Analysis"],
+["Generalization and Model Selection","Train, validation, and test sets|Stratified and grouped splits|Cross-validation|Overfitting|Underfitting|Bias and variance|Regularization|Hyperparameters|Grid and randomized search|Learning and validation curves|Model interpretation|Reproducibility"]],
+topics:[
+["Foundations and Workflow",[
+["Artificial intelligence, ML, and deep learning","Distinguish the broad field, data-driven learning methods, and neural-network-based learning."],
+["Samples, features, and targets","Identify rows, input variables, labels, and predictions in a dataset."],
+["Supervised learning","Learn mappings from labeled inputs to targets for regression and classification."],
+["Unsupervised learning","Find structure in unlabeled data through clustering, dimensionality reduction, or anomaly detection."],
+["Problem framing","Translate a real question into inputs, targets, constraints, and a measurable success criterion."],
+["Baseline","Establish a simple reference result before judging whether a complex model adds value."],
+["End-to-end workflow","Follow problem definition, data preparation, training, validation, testing, interpretation, and iteration."]]],
+["Data Preparation and Features",[
+["Exploratory data analysis","Inspect distributions, missingness, class balance, correlations, unusual values, and possible leakage."],
+["Missing values","Choose deletion or imputation strategies without learning information from the test set."],
+["Categorical encoding","Represent categories with ordinal or one-hot encodings appropriate to their meaning."],
+["Feature scaling","Use standardization or normalization when algorithm behavior depends on feature magnitude."],
+["Outliers","Identify influential observations and decide whether they are errors, rare cases, or valid extremes."],
+["Feature engineering","Create informative inputs from raw values using domain knowledge and reproducible transformations."],
+["Feature selection","Remove irrelevant or redundant inputs while avoiding selection based on held-out test results."],
+["Class imbalance","Recognize misleading accuracy and consider class weights, resampling, or threshold changes."],
+["Data leakage","Prevent future, target, duplicate, or test information from entering model training."],
+["Preprocessing pipelines","Bundle transformations and estimators so training and inference apply identical steps."]]],
+["Regression",[
+["Regression objective","Predict a continuous numerical target and measure the size and pattern of errors."],
+["Linear regression","Understand the weighted linear relationship between features and a continuous outcome."],
+["Polynomial features","Model simple nonlinear patterns by expanding inputs while monitoring overfitting."],
+["Ridge and Lasso","Understand L2 and L1 regularization as controls on coefficient size and model complexity."],
+["Regression metrics","Use MAE, MSE, RMSE, and R-squared according to error sensitivity and interpretability needs."]]],
+["Classification",[
+["Classification objective","Predict discrete labels and understand binary, multiclass, and multilabel settings."],
+["Logistic regression","Interpret class probabilities produced from a linear decision function."],
+["k-Nearest Neighbors","Predict from nearby examples and understand sensitivity to scaling and the choice of k."],
+["Naive Bayes","Understand probabilistic classification under a simplifying conditional-independence assumption."],
+["Decision trees","Learn rule-based splits, impurity, depth, and the tendency of unrestricted trees to overfit."],
+["Random forests","Understand how bagging many randomized trees improves stability and generalization."],
+["Gradient boosting","Understand sequential error correction with weak learners and controlled learning rates."],
+["Support Vector Machines","Understand maximum-margin separation, kernels at an intuitive level, and scaling requirements."],
+["Decision thresholds","Separate probability estimation from the threshold used to make a final class decision."],
+["Classification metrics","Interpret confusion matrices, accuracy, precision, recall, F1, ROC-AUC, and PR-AUC."]]],
+["Clustering and Dimensionality Reduction",[
+["Clustering objective","Group similar unlabeled samples while recognizing that clusters require interpretation."],
+["K-means","Understand centroid-based grouping, the choice of k, initialization, and sensitivity to scale and outliers."],
+["Hierarchical clustering","Understand nested clusters, linkage choices, distance measures, and dendrogram interpretation."],
+["DBSCAN","Find density-based clusters and noise without specifying a fixed number of clusters."],
+["Clustering evaluation","Use inertia, silhouette score, stability, and domain usefulness without treating them as ground truth."],
+["Principal Component Analysis","Reduce correlated numerical features into orthogonal components that retain substantial variance."]]],
+["Generalization and Model Selection",[
+["Train, validation, and test sets","Use separate data roles for fitting, choosing models, and estimating final performance."],
+["Stratified and grouped splits","Preserve class ratios or keep related samples together when random splitting would mislead."],
+["Cross-validation","Estimate model stability across multiple folds without repeatedly consulting the test set."],
+["Overfitting","Recognize strong training performance paired with weak unseen-data performance."],
+["Underfitting","Recognize when a model or feature set is too simple to capture meaningful patterns."],
+["Bias and variance","Understand the tradeoff between systematic error and sensitivity to the training sample."],
+["Regularization","Constrain model flexibility to improve performance on unseen data."],
+["Hyperparameters","Distinguish learned parameters from configuration choices made before training."],
+["Grid and randomized search","Search candidate settings within cross-validation while controlling computational cost."],
+["Learning and validation curves","Diagnose data limitations, underfitting, and overfitting from performance trends."],
+["Model interpretation","Use coefficients, tree importances, permutation importance, and error analysis cautiously."],
+["Reproducibility","Control random seeds, preserve pipelines, record settings, and keep a final untouched test set."]]]],
+tools:[
+["scikit-learn","Use estimators, preprocessing, pipelines, model selection, metrics, and inspection through a consistent API."],
+["Pandas and NumPy","Load, inspect, transform, and represent tabular data for modelling."],
+["Matplotlib and Seaborn","Visualize data distributions, errors, confusion matrices, and validation behavior."]],
+checks:[
+"Compare two classification algorithms using a pipeline, cross-validation, and metrics appropriate to the class balance.",
+"Explain why a deliberately leaked or overfit model appears strong and how the corrected evaluation changes the conclusion."]},
+
+{n:3,title:"Deep Learning Foundations",short:"Deep learning basics",color:"#D9822B",
+outcome:"Understand how neural networks compute predictions, learn through gradients, and are trained and evaluated in PyTorch.",
+src:["PyTorch: Learn the Basics","https://docs.pytorch.org/tutorials/beginner/basics/"],
+stages:[
+["Neural Network Building Blocks","Perceptron and artificial neuron|Weights and biases|Layers|Multilayer perceptron|Parameters and hyperparameters|Universal approximation intuition"],
+["Activation Functions","Sigmoid|Tanh|ReLU|Leaky ReLU and GELU|Softmax"],
+["Forward and Backward Learning","Forward propagation|Logits and predictions|Loss function|Mean squared error|Binary cross-entropy|Multiclass cross-entropy|Computational graph|Backpropagation|Automatic differentiation|Gradient accumulation"],
+["Optimization","Gradient descent|Stochastic and mini-batch gradient descent|Learning rate|Momentum|Adam|Learning-rate scheduling|Epoch, batch, and iteration"],
+["Stable Training and Generalization","Parameter initialization|Vanishing and exploding gradients|Batch normalization|Layer normalization|Dropout|Weight decay|Early stopping|Training versus evaluation mode"],
+["PyTorch Workflow","Tensors|Dataset and DataLoader|nn.Module|Training loop|Validation loop|Saving and loading|Inference|CPU and GPU execution"]],
+topics:[
+["Neural Network Building Blocks",[
+["Perceptron and artificial neuron","Understand the weighted sum, bias, activation, and output of a basic neuron."],
+["Weights and biases","Recognize trainable parameters that control feature influence and activation thresholds."],
+["Layers","Distinguish input, hidden, and output layers and track tensor shapes between them."],
+["Multilayer perceptron","Understand how stacked dense layers learn nonlinear relationships."],
+["Parameters and hyperparameters","Separate learned weights from architecture and training choices."],
+["Universal approximation intuition","Understand why sufficient nonlinear networks can represent complex functions without treating this as a guarantee of learning."]]],
+["Activation Functions",[
+["Sigmoid","Understand bounded outputs, probability-like interpretation, and saturation-related gradient problems."],
+["Tanh","Understand zero-centered bounded activation and its remaining saturation limitations."],
+["ReLU","Understand sparse positive activation, efficient gradients, and the dead-neuron risk."],
+["Leaky ReLU and GELU","Recognize alternatives that preserve some negative signal or provide smoother gating."],
+["Softmax","Convert output logits into a normalized distribution over mutually exclusive classes."]]],
+["Forward and Backward Learning",[
+["Forward propagation","Trace inputs through layer operations to obtain predictions."],
+["Logits and predictions","Distinguish raw model scores from probabilities and final decisions."],
+["Loss function","Understand loss as a differentiable training objective that measures prediction error."],
+["Mean squared error","Use squared error for suitable regression problems and understand its sensitivity to large errors."],
+["Binary cross-entropy","Use log loss for binary probabilities with the correct output representation."],
+["Multiclass cross-entropy","Train class logits against mutually exclusive labels without applying redundant softmax operations."],
+["Computational graph","View a prediction as connected tensor operations whose dependencies are tracked for differentiation."],
+["Backpropagation","Understand how the chain rule distributes output error backward through network parameters."],
+["Automatic differentiation","Use PyTorch autograd to compute gradients while understanding what requires gradient tracking."],
+["Gradient accumulation","Understand why gradients must normally be cleared between optimization steps."]]],
+["Optimization",[
+["Gradient descent","Update parameters in the direction that reduces the loss."],
+["Stochastic and mini-batch gradient descent","Trade exact full-dataset gradients for efficient noisy updates from smaller batches."],
+["Learning rate","Recognize how step size affects speed, stability, divergence, and convergence."],
+["Momentum","Use accumulated gradient direction to smooth updates and accelerate consistent movement."],
+["Adam","Understand adaptive per-parameter learning rates and why Adam is a common practical default."],
+["Learning-rate scheduling","Adjust the learning rate during training to improve convergence."],
+["Epoch, batch, and iteration","Distinguish a full pass over data, a sample group, and a single parameter update."]]],
+["Stable Training and Generalization",[
+["Parameter initialization","Initialize weights to preserve useful signal and gradient scales through layers."],
+["Vanishing and exploding gradients","Recognize unstable gradient magnitudes that prevent effective deep-network learning."],
+["Batch normalization","Understand normalization of intermediate activations and its effect on optimization."],
+["Layer normalization","Understand feature-wise normalization commonly used in sequence and Transformer models."],
+["Dropout","Randomly disable activations during training to reduce co-adaptation and overfitting."],
+["Weight decay","Penalize large weights as a practical form of L2-style regularization."],
+["Early stopping","Stop training when validation performance no longer improves."],
+["Training versus evaluation mode","Switch behaviors such as dropout and normalization correctly between fitting and inference."]]],
+["PyTorch Workflow",[
+["Tensors","Create, reshape, index, broadcast, and move tensors while tracking dtype and device."],
+["Dataset and DataLoader","Separate sample access from batching, shuffling, and parallel data delivery."],
+["nn.Module","Define reusable trainable models with registered parameters and a forward method."],
+["Training loop","Implement zero-gradient, forward, loss, backward, optimizer-step, and metric-tracking stages."],
+["Validation loop","Measure generalization without updating weights or storing unnecessary gradients."],
+["Saving and loading","Persist model parameters and restore them with a matching architecture."],
+["Inference","Prepare inputs, use evaluation mode, disable gradients, and decode model outputs."],
+["CPU and GPU execution","Understand device placement and use acceleration when available without making it a prerequisite."]]]],
+tools:[
+["PyTorch","Build models, track computations, calculate gradients, optimize parameters, and run inference."],
+["Torchmetrics or scikit-learn metrics","Evaluate predictions separately from the optimization loss."],
+["TensorBoard","Optionally inspect training and validation curves to diagnose model behavior."]],
+checks:[
+"Manually trace one forward pass and identify where every tensor shape changes.",
+"Write a small PyTorch training loop and explain the purpose of every operation in the optimization cycle."]},
+
+{n:4,title:"Deep Learning Architectures and Transformers",short:"Architectures & Transformers",color:"#C9483F",
+outcome:"Understand how architectures exploit spatial, sequential, and contextual structure, culminating in the Transformer.",
+src:["Hugging Face: The LLM Course","https://huggingface.co/learn/llm-course/chapter1/1"],
+stages:[
+["Convolutional Neural Networks","Spatial structure|Convolution|Kernel, stride, and padding|Feature maps and channels|Pooling|Receptive field|CNN hierarchy|Image augmentation"],
+["Recurrent Sequence Models","Sequence representation|Recurrent neural network|Hidden state|Backpropagation through time|Vanishing gradients in sequences|LSTM|GRU|Bidirectional recurrence"],
+["Encoder–Decoder and Embeddings","Encoder–decoder pattern|Context bottleneck|Token embeddings|Embedding lookup|Embedding dimensions"],
+["Attention","Attention intuition|Queries, keys, and values|Scaled dot-product attention|Self-attention|Cross-attention|Attention mask|Multi-head attention"],
+["Transformer Architecture","Positional encoding|Feed-forward network|Residual connections|Layer normalization|Transformer block|Encoder-only models|Decoder-only models|Encoder–decoder Transformers|Computational tradeoffs"],
+["Using Pretrained Models","Pretraining|Transfer learning|Feature extraction|Fine-tuning|Inference pipeline|Architecture selection"]],
+topics:[
+["Convolutional Neural Networks",[
+["Spatial structure","Understand why neighboring pixels and repeated local patterns make images different from ordinary feature vectors."],
+["Convolution","Apply learnable filters across local regions with shared weights."],
+["Kernel, stride, and padding","Understand how filter size, movement, and border handling determine output shape and receptive field."],
+["Feature maps and channels","Track how filters convert input channels into learned activation maps."],
+["Pooling","Summarize local regions to reduce spatial resolution and add limited translation robustness."],
+["Receptive field","Understand which input region can influence a deeper activation."],
+["CNN hierarchy","Recognize progression from simple edges and textures to task-specific patterns."],
+["Image augmentation","Use label-preserving transformations to improve robustness and reduce overfitting."]]],
+["Recurrent Sequence Models",[
+["Sequence representation","Represent ordered tokens or time steps while preserving position and variable length."],
+["Recurrent neural network","Reuse a transition function across time while carrying a hidden state."],
+["Hidden state","Interpret the recurrent state as a compressed summary of preceding sequence information."],
+["Backpropagation through time","Understand how recurrent computations are unrolled so gradients pass across time steps."],
+["Vanishing gradients in sequences","Recognize why long-range dependencies are difficult for basic RNNs."],
+["LSTM","Understand input, forget, and output gates as mechanisms for controlling long-term information flow."],
+["GRU","Understand a simpler gated recurrent alternative that combines parts of LSTM behavior."],
+["Bidirectional recurrence","Combine left-to-right and right-to-left context when the full sequence is available."]]],
+["Encoder–Decoder and Embeddings",[
+["Encoder–decoder pattern","Map an input sequence into an internal representation and decode it into an output sequence."],
+["Context bottleneck","Understand why compressing a long input into one fixed vector loses information."],
+["Token embeddings","Map discrete token IDs to dense learnable vectors that capture useful relationships."],
+["Embedding lookup","Understand that embedding layers select and train rows of an embedding matrix."],
+["Embedding dimensions","Recognize the tradeoff between representational capacity, memory, and computational cost."]]],
+["Attention",[
+["Attention intuition","Compute a weighted combination of relevant values instead of relying on one fixed context vector."],
+["Queries, keys, and values","Understand queries as requests, keys as match descriptors, and values as retrievable content."],
+["Scaled dot-product attention","Measure query-key similarity, scale scores, normalize them, and combine values."],
+["Self-attention","Let every token build a context-aware representation from other tokens in the same sequence."],
+["Cross-attention","Let one sequence attend to representations produced from another sequence."],
+["Attention mask","Block padding or future positions from contributing to attention."],
+["Multi-head attention","Learn several attention projections that can capture different relationships in parallel."]]],
+["Transformer Architecture",[
+["Positional encoding","Add order information because self-attention alone does not encode token position."],
+["Feed-forward network","Apply the same nonlinear transformation independently to each token position."],
+["Residual connections","Preserve information and improve gradient flow around attention and feed-forward sublayers."],
+["Layer normalization","Stabilize Transformer activations within each token representation."],
+["Transformer block","Combine attention, feed-forward processing, residual paths, normalization, and dropout."],
+["Encoder-only models","Use bidirectional contextual representations for understanding tasks such as classification and extraction."],
+["Decoder-only models","Generate tokens autoregressively using causal masking and preceding context."],
+["Encoder–decoder Transformers","Encode an input and condition a decoder for tasks such as translation or summarization."],
+["Computational tradeoffs","Recognize attention's parallelism, context benefits, and increasing cost for long sequences."]]],
+["Using Pretrained Models","Pretraining|Transfer learning|Feature extraction|Fine-tuning|Inference pipeline|Architecture selection"]],
+topics:[
+["Convolutional Neural Networks",[
+["Spatial structure","Understand why neighboring pixels and repeated local patterns make images different from ordinary feature vectors."],
+["Convolution","Apply learnable filters across local regions with shared weights."],
+["Kernel, stride, and padding","Understand how filter size, movement, and border handling determine output shape and receptive field."],
+["Feature maps and channels","Track how filters convert input channels into learned activation maps."],
+["Pooling","Summarize local regions to reduce spatial resolution and add limited translation robustness."],
+["Receptive field","Understand which input region can influence a deeper activation."],
+["CNN hierarchy","Recognize progression from simple edges and textures to task-specific patterns."],
+["Image augmentation","Use label-preserving transformations to improve robustness and reduce overfitting."]]],
+["Recurrent Sequence Models",[
+["Sequence representation","Represent ordered tokens or time steps while preserving position and variable length."],
+["Recurrent neural network","Reuse a transition function across time while carrying a hidden state."],
+["Hidden state","Interpret the recurrent state as a compressed summary of preceding sequence information."],
+["Backpropagation through time","Understand how recurrent computations are unrolled so gradients pass across time steps."],
+["Vanishing gradients in sequences","Recognize why long-range dependencies are difficult for basic RNNs."],
+["LSTM","Understand input, forget, and output gates as mechanisms for controlling long-term information flow."],
+["GRU","Understand a simpler gated recurrent alternative that combines parts of LSTM behavior."],
+["Bidirectional recurrence","Combine left-to-right and right-to-left context when the full sequence is available."]]],
+["Encoder–Decoder and Embeddings",[
+["Encoder–decoder pattern","Map an input sequence into an internal representation and decode it into an output sequence."],
+["Context bottleneck","Understand why compressing a long input into one fixed vector loses information."],
+["Token embeddings","Map discrete token IDs to dense learnable vectors that capture useful relationships."],
+["Embedding lookup","Understand that embedding layers select and train rows of an embedding matrix."],
+["Embedding dimensions","Recognize the tradeoff between representational capacity, memory, and computational cost."]]],
+["Attention",[
+["Attention intuition","Compute a weighted combination of relevant values instead of relying on one fixed context vector."],
+["Queries, keys, and values","Understand queries as requests, keys as match descriptors, and values as retrievable content."],
+["Scaled dot-product attention","Measure query-key similarity, scale scores, normalize them, and combine values."],
+["Self-attention","Let every token build a context-aware representation from other tokens in the same sequence."],
+["Cross-attention","Let one sequence attend to representations produced from another sequence."],
+["Attention mask","Block padding or future positions from contributing to attention."],
+["Multi-head attention","Learn several attention projections that can capture different relationships in parallel."]]],
+["Transformer Architecture",[
+["Positional encoding","Add order information because self-attention alone does not encode token position."],
+["Feed-forward network","Apply the same nonlinear transformation independently to each token position."],
+["Residual connections","Preserve information and improve gradient flow around attention and feed-forward sublayers."],
+["Layer normalization","Stabilize Transformer activations within each token representation."],
+["Transformer block","Combine attention, feed-forward processing, residual paths, normalization, and dropout."],
+["Encoder-only models","Use bidirectional contextual representations for understanding tasks such as classification and extraction."],
+["Decoder-only models","Generate tokens autoregressively using causal masking and preceding context."],
+["Encoder–decoder Transformers","Encode an input and condition a decoder for tasks such as translation or summarization."],
+["Computational tradeoffs","Recognize attention's parallelism, context benefits, and increasing cost for long sequences."]]],
+["Using Pretrained Models",[
+["Pretraining","Learn general representations from large datasets before adapting to a specific task."],
+["Transfer learning","Reuse pretrained knowledge to reduce task-specific data and training requirements."],
+["Feature extraction","Freeze a pretrained backbone and train only a task-specific prediction layer."],
+["Fine-tuning","Update some or all pretrained weights carefully on task-specific data."],
+["Inference pipeline","Load preprocessing, model weights, device settings, and output decoding consistently."],
+["Architecture selection","Choose CNNs, recurrent models, or Transformers according to data structure, task, resources, and baseline evidence."]]]],
+tools:[
+["PyTorch and Torchvision","Inspect and adapt standard CNN architectures and image preprocessing pipelines."],
+["Hugging Face Transformers","Load tokenizers and pretrained Transformer models for introductory inference."],
+["Model summaries","Inspect layer organization, tensor shapes, and parameter counts before training."]],
+checks:[
+"Sketch a CNN and a Transformer block and explain how information moves through each component.",
+"Run inference with a pretrained image or text model and identify preprocessing, model, and decoding stages."]},
+
+{n:5,title:"Natural Language Processing",short:"NLP",color:"#8A5CD1",
+outcome:"Connect traditional text representations and linguistic processing to modern Transformer and LLM workflows.",
+src:["Hugging Face: The LLM Course","https://huggingface.co/learn/llm-course/chapter1/1"],
+stages:[
+["Text and Linguistic Foundations","Corpus and document|Tokens and vocabulary|Sentence segmentation|Tokenization|Normalization|Stemming|Lemmatization|Stop words|Part-of-speech tagging|Named-entity recognition|Dependency parsing"],
+["Traditional Text Representations","Bag of words|N-grams|TF-IDF|Sparse matrices|Feature hashing"],
+["Traditional NLP Tasks and Models","Text classification|Sentiment analysis|Topic modelling|Sequence labelling|Language modelling|Text evaluation"],
+["Dense and Contextual Representations","Word2Vec|GloVe|Embedding similarity|Static embedding limitation|Contextual embeddings|Sentence and document embeddings"],
+["Tokenization for Transformers","Subword tokenization|Byte-Pair Encoding|WordPiece|Special tokens|Attention masks|Token IDs and decoding"],
+["Transformer Models and Tasks","Masked-language modelling|Causal-language modelling|BERT-style models|GPT-style models|Encoder–decoder models|Sequence classification|Token classification|Question answering|Summarization|Fine-tuning versus prompting"],
+["LLM Fundamentals","Context window|Prompt roles|Zero-shot and few-shot prompting|Generation parameters|Hallucination|LLM evaluation|Responsible NLP"]],
+topics:[
+["Text and Linguistic Foundations",[
+["Corpus and document","Distinguish a text collection from its individual records and preserve meaningful metadata."],
+["Tokens and vocabulary","Understand tokens as model input units and vocabulary as the set of recognized token IDs."],
+["Sentence segmentation","Split text into sentences while accounting for punctuation and domain-specific exceptions."],
+["Tokenization","Split text into useful units while recognizing that tokenization choices affect every later stage."],
+["Normalization","Standardize case, Unicode, punctuation, or spelling only when the task benefits from it."],
+["Stemming","Reduce words with heuristic suffix removal while accepting that outputs may not be valid words."],
+["Lemmatization","Map inflected words to dictionary forms using linguistic information."],
+["Stop words","Remove common words only when their absence does not destroy task-relevant meaning."],
+["Part-of-speech tagging","Assign grammatical categories that support parsing, extraction, and linguistic analysis."],
+["Named-entity recognition","Locate and classify spans representing people, organizations, locations, dates, and domain entities."],
+["Dependency parsing","Represent grammatical relationships between words to expose sentence structure."]]],
+["Traditional Text Representations",[
+["Bag of words","Represent documents with token counts while ignoring order and most context."],
+["N-grams","Preserve short local word or character sequences to capture limited order and phrases."],
+["TF-IDF","Weight terms by document frequency so locally important but globally common words contribute less."],
+["Sparse matrices","Store high-dimensional text features efficiently when most entries are zero."],
+["Feature hashing","Map tokens to fixed-size features without maintaining a full vocabulary, accepting possible collisions."]]],
+["Traditional NLP Tasks and Models",[
+["Text classification","Assign document labels using features such as TF-IDF with linear or probabilistic classifiers."],
+["Sentiment analysis","Predict opinion polarity while recognizing context, negation, sarcasm, and domain dependence."],
+["Topic modelling","Discover recurring word distributions with methods such as LDA and interpret topics cautiously."],
+["Sequence labelling","Assign a label to each token for tasks such as NER or part-of-speech tagging."],
+["Language modelling","Estimate token-sequence probabilities or predict missing and future tokens."],
+["Text evaluation","Choose metrics based on the task and complement automated scores with error analysis."]]],
+["Dense and Contextual Representations",[
+["Word2Vec","Learn word vectors from local context using predictive objectives such as CBOW or skip-gram."],
+["GloVe","Learn word vectors from global word co-occurrence statistics."],
+["Embedding similarity","Use cosine similarity to compare directions while checking whether semantic closeness matches the task."],
+["Static embedding limitation","Recognize that one vector per word cannot represent different meanings in different contexts."],
+["Contextual embeddings","Represent the same token differently according to its surrounding text."],
+["Sentence and document embeddings","Compress longer text into dense vectors for similarity, retrieval, clustering, and classification."]]],
+["Tokenization for Transformers",[
+["Subword tokenization","Balance word-level meaning with coverage of rare and unseen words."],
+["Byte-Pair Encoding","Build subword units by repeatedly merging frequent symbol pairs."],
+["WordPiece","Construct subword vocabularies that can compose frequent and rare word forms."],
+["Special tokens","Understand task and boundary markers such as beginning, end, classification, separator, padding, and mask tokens."],
+["Attention masks","Tell a model which token positions are meaningful and which are padding or prohibited context."],
+["Token IDs and decoding","Convert text to model IDs and generated IDs back to readable text consistently."]]],
+["Transformer Models and Tasks",[
+["Masked-language modelling","Train a model to reconstruct hidden tokens using bidirectional context."],
+["Causal-language modelling","Train a model to predict the next token from preceding tokens."],
+["BERT-style models","Use encoder-only contextual representations for classification and token-level understanding tasks."],
+["GPT-style models","Use decoder-only autoregressive models for conditional text generation."],
+["Encoder–decoder models","Use sequence-to-sequence Transformers for transformation tasks such as summarization and translation."],
+["Sequence classification","Attach a classifier to an encoded sequence representation for document-level labels."],
+["Token classification","Predict a label for each token while aligning subword tokens with original text labels."],
+["Question answering","Distinguish extractive span selection from generative answering."],
+["Summarization","Condense source text while preserving key facts and checking unsupported claims."],
+["Fine-tuning versus prompting","Choose between updating model parameters and guiding a frozen model with instructions or examples."]]],
+["LLM Fundamentals",[
+["Context window","Understand the token budget shared by instructions, inputs, retrieved context, history, and outputs."],
+["Prompt roles","Separate system-level guidance, user requests, assistant messages, and tool results where the model API supports them."],
+["Zero-shot and few-shot prompting","Guide behavior with instructions alone or with a small number of representative examples."],
+["Generation parameters","Understand how temperature, top-p, maximum tokens, and stopping rules influence output."],
+["Hallucination","Recognize fluent unsupported output and use grounding, verification, and abstention to reduce its impact."],
+["LLM evaluation","Evaluate task success, factual grounding, consistency, safety, latency, and cost rather than relying on one score."],
+["Responsible NLP","Check privacy, bias, harmful content, licensing, and human-impact risks throughout data and model use."]]]],
+tools:[
+["NLTK","Explore classic tokenization, stemming, corpora, and introductory NLP utilities."],
+["spaCy","Build practical pipelines for tokenization, lemmatization, POS tagging, parsing, and NER."],
+["scikit-learn","Create sparse text pipelines and classical classification or clustering baselines."],
+["Hugging Face Transformers and Datasets","Use tokenizers, pretrained models, pipelines, datasets, and task-specific inference."]],
+checks:[
+"Compare TF-IDF and contextual embeddings for the same set of short documents and explain their different notions of similarity.",
+"Run two pretrained NLP tasks and trace text through tokenization, model inference, and output decoding."]},
+
+{n:6,title:"LangChain",short:"LangChain & RAG",color:"#3F9A3F",
+outcome:"Learn the components and data flow used to build grounded, observable LLM applications with models, prompts, tools, retrieval, and agents.",
+src:["LangChain Overview","https://docs.langchain.com/oss/python/langchain/overview"],
+stages:[
+["Models, Messages, and Prompts","Provider integration|Hosted versus local models|Chat model interface|Messages and roles|Prompt templates|Prompt variables|Model parameters"],
+["Outputs and Composition","Model response|Structured output|Output parsing|Runnables|Chains|Branching and fallback|Streaming"],
+["Tools and Agents","Tool|Tool calling|Tool schema quality|Agent loop|Agent state|Stopping conditions|Deterministic versus agentic workflow|Tool error handling"],
+["Documents and Retrieval","Document object|Document loader|Text splitting|Chunk size and overlap|Embedding model|Vector store|Retriever|Metadata filtering|Retrieval quality"],
+["Retrieval-Augmented Generation","RAG purpose|Indexing flow|Query flow|Similarity search|Top-k and context selection|Grounded answer|RAG failure modes|RAG evaluation"],
+["Context, Observability, and Safety","Conversation history|Short-term context|Tracing|Evaluation datasets|Prompt injection|Tool authorization|Secrets and sensitive data"]],
+topics:[
+["Models, Messages, and Prompts",[
+["Provider integration","Understand that provider packages connect LangChain's common interface to hosted or local model APIs."],
+["Hosted versus local models","Compare setup, privacy, capability, hardware, latency, and cost without assuming one universal choice."],
+["Chat model interface","Invoke, batch, and stream models through a consistent message-oriented API."],
+["Messages and roles","Represent system guidance, human input, assistant output, and tool results as structured messages."],
+["Prompt templates","Parameterize repeatable instructions and inputs instead of assembling fragile strings throughout the application."],
+["Prompt variables","Validate and substitute dynamic values while keeping instructions and untrusted content distinguishable."],
+["Model parameters","Configure output length, randomness, timeouts, retries, and provider-specific capabilities intentionally."]]],
+["Outputs and Composition",[
+["Model response","Inspect content, metadata, usage, tool calls, and finish reasons where the provider exposes them."],
+["Structured output","Constrain responses to a schema when downstream code needs dependable fields."],
+["Output parsing","Convert model text or structured responses into application-ready types and handle parse failures."],
+["Runnables","Understand the common invocation and composition interface used across LangChain components."],
+["Chains","Compose prompts, models, parsers, retrievers, and functions into deterministic multi-step data flows."],
+["Branching and fallback","Route inputs or retry alternative models when a primary path is inappropriate or unavailable."],
+["Streaming","Deliver partial output or intermediate events while handling cancellation and incomplete results."]]],
+["Tools and Agents",[
+["Tool","Define a callable capability with a clear name, description, input schema, and controlled output."],
+["Tool calling","Let a compatible model request a function call while application code executes and returns the result."],
+["Tool schema quality","Use precise types and descriptions because the model depends on them to select and call tools correctly."],
+["Agent loop","Understand repeated model selection, tool execution, observation, and stopping."],
+["Agent state","Track messages and application context needed across steps of an agent run."],
+["Stopping conditions","Bound iterations, time, tokens, and tool use so agents cannot loop indefinitely."],
+["Deterministic versus agentic workflow","Use fixed chains for predictable steps and agents only where dynamic decisions add value."],
+["Tool error handling","Return useful failures, distinguish retryable errors, and prevent raw exceptions from controlling model behavior."]]],
+["Documents and Retrieval",[
+["Document object","Represent page content together with metadata used for filtering, attribution, and traceability."],
+["Document loader","Convert files or data sources into consistent document objects while respecting source permissions."],
+["Text splitting","Break long documents into retrievable units that preserve enough context without exceeding model limits."],
+["Chunk size and overlap","Balance semantic completeness, retrieval precision, duplication, and context-window use."],
+["Embedding model","Convert queries and chunks into vectors within the same semantic representation space."],
+["Vector store","Persist embeddings and metadata and support similarity search."],
+["Retriever","Expose a consistent interface that returns context relevant to a query."],
+["Metadata filtering","Restrict retrieval by source, user, date, category, or authorization attributes."],
+["Retrieval quality","Assess whether returned chunks are relevant, sufficient, diverse, and correctly ranked."]]],
+["Retrieval-Augmented Generation",[
+["RAG purpose","Ground model output in selected external knowledge without retraining the base model."],
+["Indexing flow","Load, clean, split, embed, and store documents with traceable metadata."],
+["Query flow","Transform a user question, retrieve context, construct a grounded prompt, generate an answer, and cite sources."],
+["Similarity search","Retrieve chunks whose vector representations are close to the query embedding."],
+["Top-k and context selection","Choose enough evidence for coverage without flooding the context with weak or redundant chunks."],
+["Grounded answer","Require the model to rely on supplied evidence and state when evidence is insufficient."],
+["RAG failure modes","Recognize ingestion, chunking, retrieval, ranking, prompt, generation, and citation failures separately."],
+["RAG evaluation","Measure retrieval relevance and answer faithfulness in addition to end-user usefulness."]]],
+["Context, Observability, and Safety",[
+["Conversation history","Retain only the messages necessary for continuity while controlling growth and privacy."],
+["Short-term context","Pass run-specific state and messages without treating them as permanent user memory."],
+["Tracing","Inspect model calls, prompts, tool calls, retrieval results, latency, errors, and token usage."],
+["Evaluation datasets","Maintain representative inputs and expected qualities for repeatable regression testing."],
+["Prompt injection","Treat retrieved documents and tool outputs as untrusted data that must not override trusted instructions."],
+["Tool authorization","Check permissions in application code rather than trusting the model to enforce access."],
+["Secrets and sensitive data","Keep credentials out of prompts and logs and minimize personal data sent to providers."]]]],
+tools:[
+["LangChain Python packages","Use current model, prompt, tool, retriever, and agent interfaces rather than copying legacy APIs."],
+["FAISS or Chroma","Use a free local vector store for learning similarity search and metadata-aware retrieval."],
+["Ollama or a free model tier","Use a local model when practical and a hosted free tier only when capability or hardware requires it."],
+["LangSmith","Optionally trace and evaluate development runs using its available free tier."]],
+checks:[
+"Create a small chain with a prompt, model, and structured output, then trace the input and output of each component.",
+"Build a tiny local-document retriever and inspect retrieved chunks before allowing a model to answer from them."]},
+
+{n:7,title:"LangGraph",short:"LangGraph",color:"#D1578A",
+outcome:"Design explicit, stateful, testable, and resumable workflows for LLM applications that require branching, loops, tools, or human control.",
+src:["LangGraph Overview","https://docs.langchain.com/oss/python/langgraph/overview"],
+stages:[
+["Graph Fundamentals","Graph-based orchestration|State|State schema|Node|Edge|START and END|Compilation|Invocation"],
+["Control Flow and State Updates","Conditional edge|Loops|Command|Reducers|Message state|Input and output schemas|Parallel branches|Subgraphs"],
+["Agents and Tools","Model node|Tool node|Agentic loop|Deterministic guardrails|Context engineering|Multi-agent introduction"],
+["Persistence and Memory","Thread|Checkpoint|Checkpointer|Short-term memory|Long-term memory|State history|Replay and time travel"],
+["Human Control and Reliability","Interrupt|Human approval|Resume|Retry policy|Idempotency|Error state|Timeout and recursion limits"],
+["Streaming, Testing, and Observability","Streaming modes|Node-level testing|Routing tests|Persistence tests|Tracing|Evaluation"]],
+topics:[
+["Graph Fundamentals",[
+["Graph-based orchestration","Represent application control flow explicitly so possible paths and state changes are inspectable."],
+["State","Define the shared data that nodes can read and update during a graph run."],
+["State schema","Specify state fields and types with a TypedDict, dataclass, or suitable validation model."],
+["Node","Implement one focused computation or controlled side effect that returns state updates."],
+["Edge","Define the fixed transition from one node to the next."],
+["START and END","Mark graph entry and termination clearly."],
+["Compilation","Compile the graph to validate structure and attach runtime features such as checkpointing."],
+["Invocation","Run a compiled graph with initial state and inspect the resulting state or events."]]],
+["Control Flow and State Updates",[
+["Conditional edge","Choose the next node from current state without hiding routing logic inside prompts."],
+["Loops","Repeat nodes for refinement or tool use while defining explicit exit conditions."],
+["Command","Combine state updates with routing or resumption instructions when the workflow requires it."],
+["Reducers","Control how concurrent or repeated updates replace, combine, or append state values."],
+["Message state","Accumulate chat and tool messages using message-aware update behavior."],
+["Input and output schemas","Expose only the state fields required at graph boundaries."],
+["Parallel branches","Run independent nodes in the same graph step and merge their updates predictably."],
+["Subgraphs","Encapsulate reusable workflows while deciding how parent and child state are shared."]]],
+["Agents and Tools",[
+["Model node","Call an LLM within a node and convert its response into a state update."],
+["Tool node","Execute approved tool calls and return structured observations to the graph."],
+["Agentic loop","Route between model and tool nodes until the model completes or a safety limit is reached."],
+["Deterministic guardrails","Place permission, validation, and policy checks in code-controlled nodes and edges."],
+["Context engineering","Supply each node only the state, tools, and retrieved information needed for its role."],
+["Multi-agent introduction","Treat specialized agents as coordinated nodes or subgraphs without adding them when one workflow is sufficient."]]],
+["Persistence and Memory",[
+["Thread","Use a thread identifier to associate checkpoints with one continuing interaction or workflow instance."],
+["Checkpoint","Save graph state at execution boundaries so runs can be inspected and resumed."],
+["Checkpointer","Choose in-memory persistence for learning and durable storage for real applications."],
+["Short-term memory","Preserve thread-scoped conversation and workflow state across multiple invocations."],
+["Long-term memory","Store selected information across threads separately from the complete message history."],
+["State history","Inspect earlier checkpoints to debug transitions and understand how the run evolved."],
+["Replay and time travel","Resume from a prior checkpoint while understanding which later operations will run again."]]],
+["Human Control and Reliability",[
+["Interrupt","Pause execution at a controlled point and surface a serializable request for external input."],
+["Human approval","Require explicit review before sensitive, irreversible, or high-impact actions."],
+["Resume","Continue the same thread with a response that becomes available to the interrupted node."],
+["Retry policy","Retry only suitable transient failures with bounded attempts and useful error reporting."],
+["Idempotency","Design repeated execution so retries and resumes do not duplicate external side effects."],
+["Error state","Record enough failure context to recover or terminate safely without corrupting state."],
+["Timeout and recursion limits","Bound runtime and graph steps to prevent stalled or uncontrolled loops."]]],
+["Streaming, Testing, and Observability",[
+["Streaming modes","Choose whether to stream state values, updates, messages, or custom progress events."],
+["Node-level testing","Test deterministic nodes with fixed state inputs and expected updates."],
+["Routing tests","Verify each conditional path, loop exit, and error branch independently of model randomness."],
+["Persistence tests","Confirm checkpoints, thread isolation, interrupts, and resumes preserve the intended state."],
+["Tracing","Inspect node timing, model calls, tool execution, transitions, state changes, and failures."],
+["Evaluation","Measure workflow completion, answer quality, tool correctness, recovery, and safety outcomes."]]]],
+tools:[
+["LangGraph","Build state graphs, conditional routes, persistence, streaming, and human-in-the-loop workflows."],
+["LangChain integrations","Reuse model, message, retriever, and tool interfaces inside graph nodes."],
+["SQLite checkpointer","Practice durable local state after understanding the in-memory checkpointer."],
+["LangSmith","Optionally visualize graph execution and investigate model, tool, and state behavior."]],
+checks:[
+"Create a small deterministic graph with branching and explain every state update and routing decision.",
+"Add a checkpoint and approval interrupt, then demonstrate pausing and resuming the same thread safely."]},
+
+{n:8,title:"MCP — Model Context Protocol",short:"MCP",color:"#A68A1F",
+outcome:"Understand the protocol and safely build Python clients and servers that expose reusable tools, resources, and prompts to LLM hosts.",
+src:["MCP Specification","https://modelcontextprotocol.io/specification/"],
+src2:["MCP Python SDK","https://py.sdk.modelcontextprotocol.io/"],
+stages:[
+["Purpose and Architecture","MCP purpose|Host|Client|Server|Trust boundary|Local versus remote server"],
+["Protocol and Lifecycle","JSON-RPC 2.0|Connection lifecycle|Initialization|Capability negotiation|Sessions|Progress and cancellation|Logging and errors"],
+["Server Primitives","Tools|Tool discovery|Tool results|Resources|Resource templates|Resource metadata|Prompts|Primitive selection"],
+["Client Behavior","Discovery|Calling tools|Reading resources|Retrieving prompts|Pagination|Content blocks|Async lifecycle"],
+["Transports and Extended Features","stdio transport|Streamable HTTP|Sampling|Roots|Elicitation|Completions"],
+["Building and Testing","Official Python SDK|Typed schemas|In-process testing|Transport testing|MCP Inspector|Host configuration"],
+["Security and Responsible Integration","User consent|Authentication|Authorization|Least privilege|Input validation|Untrusted metadata|Prompt injection|Sensitive data|Side-effect control"],
+["Integration with LLM Applications","MCP-to-tool mapping|Resource grounding|LangGraph integration|Failure isolation|Observability"]],
+topics:[
+["Purpose and Architecture",[
+["MCP purpose","Standardize how LLM applications discover and use external context and capabilities."],
+["Host","Understand the user-facing LLM application that manages connections, permissions, and overall context."],
+["Client","Understand the connector that maintains one isolated session with a particular MCP server."],
+["Server","Understand the focused service that exposes tools, resources, and prompts."],
+["Trust boundary","Treat every server connection as a separate source of data and executable capabilities with its own permissions."],
+["Local versus remote server","Distinguish a subprocess on the user's machine from a network service with separate authentication needs."]]],
+["Protocol and Lifecycle",[
+["JSON-RPC 2.0","Understand requests, responses, notifications, identifiers, results, and structured errors at a practical level."],
+["Connection lifecycle","Follow connection setup, initialization, normal operation, cancellation, and shutdown cleanly."],
+["Initialization","Exchange protocol versions, capabilities, implementation information, and instructions before normal requests."],
+["Capability negotiation","Use only features advertised by each side instead of assuming every client or server supports them."],
+["Sessions","Maintain state and request correlation for the lifetime of a client-server connection."],
+["Progress and cancellation","Report long-running progress and respond correctly when the host cancels work."],
+["Logging and errors","Return protocol-level errors and diagnostic information without leaking secrets or internal details."]]],
+["Server Primitives",[
+["Tools","Expose model-invokable functions with names, descriptions, JSON-compatible input schemas, and controlled results."],
+["Tool discovery","Let clients list available tools and inspect their schemas before requesting execution."],
+["Tool results","Return text, structured content, media, or resource links and distinguish errors from successful results."],
+["Resources","Expose application-controlled contextual data identified by stable URIs for clients to read."],
+["Resource templates","Describe parameterized URI patterns for collections whose exact resource identifiers vary."],
+["Resource metadata","Provide names, descriptions, MIME types, sizes, and change information where useful."],
+["Prompts","Expose user-selected message templates with documented arguments and predictable rendered messages."],
+["Primitive selection","Use tools for actions, resources for readable context, and prompts for user-invoked templates."]]],
+["Client Behavior",[
+["Discovery","List server capabilities before presenting or using tools, resources, and prompts."],
+["Calling tools","Validate arguments, request execution, inspect structured and unstructured results, and handle reported errors."],
+["Reading resources","List or address resources by URI and preserve content type and provenance."],
+["Retrieving prompts","Request a named prompt with arguments and place its rendered messages into the host-controlled conversation."],
+["Pagination","Continue list operations with cursors until the server indicates that no further page remains."],
+["Content blocks","Narrow and handle text, images, audio, resource links, and embedded resources according to their types."],
+["Async lifecycle","Open, use, and close client sessions with asynchronous context management."]]],
+["Transports and Extended Features",[
+["stdio transport","Launch a local server as a subprocess and exchange protocol messages over standard input and output."],
+["Streamable HTTP","Connect to a remotely hosted MCP endpoint over HTTP with appropriate session and authentication handling."],
+["Sampling","Understand server requests for host-mediated model generation while preserving user and host control."],
+["Roots","Understand client-declared URI or filesystem boundaries that help servers limit where they operate."],
+["Elicitation","Understand server requests for additional structured user information without turning this into a core beginner requirement."],
+["Completions","Understand optional assistance for filling prompt arguments or resource-template values."]]],
+["Building and Testing",[
+["Official Python SDK","Register primitives and implement clients using the current stable SDK rather than hand-writing protocol messages."],
+["Typed schemas","Use Python types or validation models to generate clear, enforceable tool input and output structures."],
+["In-process testing","Connect a test client directly to a server object for fast deterministic tests without ports or subprocesses."],
+["Transport testing","Test stdio or HTTP separately from business logic after in-process behavior is correct."],
+["MCP Inspector","Interactively discover and invoke server capabilities while inspecting request and response behavior."],
+["Host configuration","Declare the server command, arguments, environment, or endpoint without embedding secrets in shared files."]]],
+["Security and Responsible Integration",[
+["User consent","Make data access and action requests visible and require approval where the host or risk level demands it."],
+["Authentication","Verify the identity allowed to connect to a remote service."],
+["Authorization","Enforce which user may access each resource or invoke each tool in server-side code."],
+["Least privilege","Expose only the data, filesystem paths, credentials, and actions required for the server's purpose."],
+["Input validation","Validate type, size, ranges, URIs, and paths before any tool performs work."],
+["Untrusted metadata","Do not treat tool descriptions, annotations, or external server content as trusted policy."],
+["Prompt injection","Prevent resource or tool content from overriding host instructions, permissions, or user intent."],
+["Sensitive data","Minimize collection, transmission, retention, and logging of secrets and personal information."],
+["Side-effect control","Separate read-only and mutating operations and require stronger confirmation for consequential actions."]]],
+["Integration with LLM Applications",[
+["MCP-to-tool mapping","Adapt discovered MCP tools to the tool interface expected by the chosen model or agent framework."],
+["Resource grounding","Use MCP resources as attributed context while preserving source and access boundaries."],
+["LangGraph integration","Place MCP discovery or invocation in controlled nodes with explicit state, routing, and approvals."],
+["Failure isolation","Handle one unavailable or untrusted server without corrupting the entire agent workflow."],
+["Observability","Record server identity, capability used, latency, result status, and approval decisions without logging secrets."]]]],
+tools:[
+["Official MCP Python SDK","Build and test MCP servers and clients using typed protocol abstractions."],
+["MCP Inspector","Inspect capabilities and manually test tools, resources, prompts, and protocol behavior."],
+["LangChain or LangGraph adapters","Connect approved MCP capabilities to an LLM application after the protocol flow is understood independently."]],
+checks:[
+"Create a small local server with one read-only tool, one resource, and one prompt, then inspect all three capabilities.",
+"Use a Python client to discover and call the server, validate its outputs, handle one error, and explain the host-side permission boundary.",
+"Optionally connect the server to a LangGraph node with an approval step before any side-effecting tool call."]}
+];
+
+const SKILLS = [
+["Mathematical intuition","Explain how vectors, matrices, similarity, gradients, eigen concepts, and decompositions appear in AI systems.",[1]],
+["Problem framing","Translate a practical question into data, inputs, targets, constraints, baselines, and suitable evaluation criteria.",[2]],
+["Classical ML workflow","Prepare features and train, validate, compare, interpret, and debug regression, classification, and clustering models.",[2]],
+["Reliable evaluation","Use proper splits, cross-validation, task-appropriate metrics, leakage prevention, and error analysis.",[2]],
+["Neural-network training","Build and explain a PyTorch training loop including forward propagation, loss, gradients, optimization, and validation.",[3]],
+["Architecture understanding","Explain the key mechanisms and use cases of MLPs, CNNs, RNNs, LSTMs, attention, and Transformers.",[3,4]],
+["Modern NLP","Prepare text, compare sparse and dense representations, and use pretrained Transformer models for common NLP tasks.",[5]],
+["LLM literacy","Reason about tokenization, context windows, prompting, generation, hallucination, grounding, evaluation, and responsible use.",[5]],
+["LangChain applications","Compose prompts, models, structured outputs, tools, retrievers, and agents through current LangChain interfaces.",[6]],
+["RAG systems","Build and diagnose a document ingestion, embedding, retrieval, grounded-generation, and citation flow.",[6]],
+["LangGraph workflows","Design state schemas, nodes, routes, loops, checkpoints, memory, interrupts, retries, and resumable execution.",[7]],
+["Human-controlled agents","Place deterministic permissions, stopping conditions, validation, and human approval around agent decisions.",[6,7]],
+["MCP servers","Expose well-described tools, resources, resource templates, and prompts using the official Python SDK.",[8]],
+["MCP clients","Negotiate a session, discover capabilities, read resources, retrieve prompts, call tools, and handle typed results and errors.",[8]],
+["Safe integration","Connect MCP capabilities to an LLM workflow while preserving consent, authorization, least privilege, provenance, and injection resistance.",[8]],
+["Technical communication","Explain system data flow, assumptions, limitations, evaluation evidence, and safety controls clearly to another developer.",[1,2,3,4,5,6,7,8]]
+];
+
+/* ===== helpers ===== */
+const $=(s,r=document)=>r.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pad=n=>String(n).padStart(2,"0");
+const fmt=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const pd=s=>new Date(s+"T00:00:00");
+const today=()=>fmt(new Date());
+const addDays=(s,n)=>{const d=pd(s);d.setDate(d.getDate()+n);return fmt(d)};
+const diffDays=(a,b)=>Math.round((pd(b)-pd(a))/864e5);
+const slug=s=>s.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
+const hm=sec=>{sec=Math.round(sec);const h=Math.floor(sec/3600),m=Math.floor(sec%3600/60);return h?h+"h "+m+"m":m?m+"m":sec+"s"};
+const nice=s=>s?pd(s).toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"}):"—";
+const STAT=["Not started","Learning","Understood","Mastered"];
+const INT=[1,3,7,14,30];
+
+/* ===== build flat index ===== */
+const ALL=[],BY={};
+ROADMAP.forEach(m=>{
+  const stageOf={};
+  m.stages.forEach((s,i)=>s[1].split("|").forEach(n=>stageOf[n.toLowerCase()]=i));
+  m.cs=[];
+  m.topics.forEach((t,ti)=>t[1].forEach(([name,learn])=>{
+    const c={id:`m${m.n}-t${ti+1}-${slug(name)}`,name,learn,m:m.n,t:ti,topic:t[0],stage:stageOf[name.toLowerCase()]};
+    ALL.push(c);BY[c.id]=c;m.cs.push(c);
+  }));
+});
+const MON=n=>ROADMAP[n-1];
+
+/* ===== state ===== */
+const KEY="airt.v1";
+let mem=null;
+function blank(){return{v:1,c:{},ck:{},tl:{},sk:{},py:{done:false,notes:""},log:{},time:{},ev:[],set:{start:today(),goal:15,theme:"auto",lock:false,lastBackup:null,firstUse:today(),last:null},fin:{}}}
+function load(){
+  try{const r=localStorage.getItem(KEY);if(r){const o=JSON.parse(r);return Object.assign(blank(),o,{set:Object.assign(blank().set,o.set||{})})}}catch(e){}
+  return mem||blank();
+}
+let S=load();
+function save(){mem=S;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+const dflt=()=>({st:0,conf:0,notes:"",own:"",res:[],sn:[],cards:[],time:0,rev:null,due:null,step:-1,doneAt:null});
+const R_=id=>S.c[id]||dflt();
+const W=id=>S.c[id]||(S.c[id]=dflt());
+const done=id=>R_(id).st>=2;
+function bump(){const d=today();S.log[d]=(S.log[d]||0)+1}
+function ev(txt,id){S.ev.unshift({t:new Date().toISOString(),txt,id});if(S.ev.length>150)S.ev.length=150}
+function toast(t){const e=document.createElement("div");e.className="toast";e.textContent=t;e.setAttribute("role","status");document.body.appendChild(e);setTimeout(()=>e.remove(),1900)}
+
+/* ===== computed ===== */
+function mprog(n){const cs=MON(n).cs;const d=cs.filter(c=>done(c.id)).length;return{d,t:cs.length,p:cs.length?d/cs.length:0}}
+function oprog(){const d=ALL.filter(c=>done(c.id)).length;return{d,t:ALL.length,p:d/ALL.length}}
+function dueList(){const t=today();return ALL.filter(c=>{const r=R_(c.id);return r.st>=2&&r.due&&r.due<=t})}
+function dueCards(){const t=today(),out=[];ALL.forEach(c=>R_(c.id).cards.forEach((k,i)=>{if(!k.due||k.due<=t)out.push({id:c.id,i,k})}));return out}
+function streak(){let d=today(),n=0;if(!S.log[d])d=addDays(d,-1);while(S.log[d]){n++;d=addDays(d,-1)}return n}
+function weekDone(){const lim=addDays(today(),-6);return ALL.filter(c=>{const r=R_(c.id);return r.st>=2&&r.doneAt&&r.doneAt>=lim}).length}
+function totalTime(){return Object.values(S.time).reduce((a,b)=>a+b,0)}
+function endDate(){const d=pd(S.set.start);d.setMonth(d.getMonth()+8);return fmt(d)}
+function pace(){
+  const s=S.set.start,e=endDate(),t=today();
+  const exp=Math.max(0,Math.min(1,diffDays(s,t)/diffDays(s,e)));
+  const act=oprog().p;const gap=act-exp;
+  return{exp,act,label:diffDays(s,t)<0?"Not started yet":gap>=0.02?"Ahead":gap<=-0.04?"Behind":"On track",gap}
+}
+function firstOpen(){return ALL.find(c=>!done(c.id))}
+
+/* ===== markdown (small, safe) ===== */
+function inline(s){
+  s=esc(s);
+  s=s.replace(/`([^`]+)`/g,"<code>$1</code>");
+  s=s.replace(/\$([^$\n]+)\$/g,'<span class="math">$1</span>');
+  s=s.replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>").replace(/\*([^*]+)\*/g,"<em>$1</em>");
+  s=s.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g,'<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+  return s;
+}
+function md(src){
+  if(!src.trim())return'<p class="muted small">Nothing to preview yet.</p>';
+  const L=src.split("\n");let out="",i=0,list=false;
+  const close=()=>{if(list){out+="</ul>";list=false}};
+  while(i<L.length){
+    const l=L[i];
+    if(l.startsWith("```")){close();let b=[];i++;while(i<L.length&&!L[i].startsWith("```")){b.push(L[i]);i++}i++;out+="<pre><code>"+esc(b.join("\n"))+"</code></pre>";continue}
+    let m;
+    if(m=l.match(/^(#{1,3})\s+(.*)/)){close();out+=`<h${m[1].length}>${inline(m[2])}</h${m[1].length}>`}
+    else if(m=l.match(/^\s*[-*]\s+(.*)/)){if(!list){out+="<ul>";list=true}out+="<li>"+inline(m[1])+"</li>"}
+    else if(!l.trim()){close()}
+    else{close();out+="<p>"+inline(l)+"</p>"}
+    i++;
+  }
+  close();return out;
+}
+
+/* ===== actions ===== */
+let openId=null,PV=false,T=null,tick=null;
+function setStatus(id,st){
+  const r=W(id),was=mprog(BY[id].m).p;
+  const prev=r.st;r.st=st;
+  if(st>=2&&!r.doneAt){r.doneAt=today();r.step=0;r.due=addDays(today(),1)}
+  if(st<2){r.doneAt=null;r.due=null;r.step=-1}
+  S.set.last=id;bump();ev(`${STAT[st]}: ${BY[id].name}`,id);save();
+  const now=mprog(BY[id].m).p;
+  if(now===1&&was<1){confetti();toast(`Month ${BY[id].m} complete`)}
+  render();if(openId===id)drawer();
+}
+function toggleDone(id){setStatus(id,done(id)?0:2)}
+function setConf(id,n){const r=W(id);r.conf=r.conf===n?0:n;save();drawer();render()}
+function fld(id,k,v){const r=W(id);r[k]=v;S.set.last=id;
+  const d=today();if(r._ld!==d){r._ld=d;bump();ev(`Edited notes: ${BY[id].name}`,id)}
+  clearTimeout(fld.t);fld.t=setTimeout(save,300)}
+function schedule(r,grade){
+  let step=Math.max(r.step,0),mult=r.conf&&r.conf<=2?0.7:r.conf>=5?1.3:1;
+  if(grade===0)step=0;else if(grade===2)step=Math.min(step+1,4);else if(grade===3)step=Math.min(step+2,4);
+  let days=Math.max(1,Math.round(INT[step]*mult));
+  if(grade===1)days=Math.max(1,Math.round(INT[step]*0.6));
+  if(grade===0)days=1;
+  r.step=step;r.due=addDays(today(),days);r.rev=today();
+}
+function rate(id,g){const r=W(id);schedule(r,g);bump();ev(`Reviewed: ${BY[id].name}`,id);save();Rv.flip=false;Rv.idx=Math.min(Rv.idx,Math.max(0,dueList().length-1));render()}
+function markRevised(id){const r=W(id);schedule(r,2);bump();ev(`Revised: ${BY[id].name}`,id);save();toast("Marked as revised");drawer();render()}
+function rateCard(id,i,g){const k=W(id).cards[i];const t=today();
+  let step=k.step||0;if(g===0)step=0;else if(g===2)step=Math.min(step+1,4);else if(g===3)step=Math.min(step+2,4);
+  k.step=step;k.due=addDays(t,g===0?1:g===1?Math.max(1,Math.round(INT[step]*.6)):INT[step]);bump();save();Rv.flip=false;render()}
+function addRes(id){const t=$("#r-title").value.trim(),u=$("#r-url").value.trim(),k=$("#r-type").value;
+  if(!t||!/^https?:\/\//i.test(u)){toast("Add a title and a link starting with http");return}
+  W(id).res.push({t,u,k,done:false});save();drawer()}
+function delItem(id,key,i){W(id)[key].splice(i,1);save();drawer()}
+function toggleRes(id,i){const x=W(id).res[i];x.done=!x.done;save();drawer()}
+function addSnip(id){const c=$("#s-code").value;if(!c.trim())return;W(id).sn.push({l:$("#s-lang").value.trim()||"code",c});save();drawer()}
+function addCard(id){const q=$("#c-q").value.trim(),a=$("#c-a").value.trim();if(!q||!a){toast("Write both a question and an answer");return}W(id).cards.push({q,a,due:null,step:0});save();drawer()}
+function copy(txt){
+  const ok=()=>toast("Copied");
+  if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(txt).then(ok,()=>fb())}else fb();
+  function fb(){const t=document.createElement("textarea");t.value=txt;t.style.position="fixed";t.style.opacity="0";document.body.appendChild(t);t.select();try{document.execCommand("copy");ok()}catch(e){toast("Copy failed. Select the text and copy manually.")}t.remove()}
+}
+function copySnip(id,i){copy(R_(id).sn[i].c)}
+const PROMPTS={
+  standard:(c,m)=>`Teach me "${c.name}" from the topic "${c.topic}" (${m.title}). Context from my roadmap: ${c.learn}\n\nPlease give me:\n1) An intuitive explanation with an analogy\n2) The math or formal definition\n3) A small worked numeric example\n4) A minimal Python (NumPy/PyTorch/scikit-learn as fitting) code example\n5) Common mistakes\n6) 5 quiz questions with answers`,
+  eli5:(c,m)=>`Explain "${c.name}" (${m.title}) as if I were 12 years old. Use one everyday analogy, no jargon, then bridge to the real technical meaning in two sentences. Context: ${c.learn}`,
+  interview:(c,m)=>`Act as an ML interviewer. Topic: "${c.name}" (${m.title}). Context: ${c.learn}\nAsk me 6 questions that go from basic to tricky, one at a time. Wait for my answer, grade it, and correct me before the next question.`,
+  code:(c,m)=>`Teach "${c.name}" (${m.title}) code-first. Start with a short, runnable Python example I can paste into a notebook, print intermediate shapes/values, then explain each line and the concept behind it. Context: ${c.learn}`,
+  math:(c,m)=>`Teach "${c.name}" (${m.title}) math-first. Give the precise definitions and notation, derive the key result step by step, then connect it to how it is used in AI. Context: ${c.learn}`
+};
+function copyPrompt(id){copy(PROMPTS[$("#pv").value](BY[id],MON(BY[id].m)))}
+function timerToggle(id){
+  if(T){timerStop();if(T===null){}}
+  else{T={id,start:Date.now()};tick=setInterval(timerShow,1000)}
+  drawer();
+}
+function timerStop(){
+  if(!T)return;const sec=(Date.now()-T.start)/1000;clearInterval(tick);
+  if(sec>=1){W(T.id).time+=sec;S.time[today()]=(S.time[today()]||0)+sec;bump();save()}
+  T=null;
+}
+function timerShow(){const e=$("#timer-disp");if(!e||!T)return;e.textContent=hm((R_(T.id).time)+(Date.now()-T.start)/1000)}
+function confetti(){
+  if(!Element.prototype.animate)return;
+  if(window.matchMedia&&window.matchMedia("(prefers-reduced-motion:reduce)").matches)return;
+  const cols=["#3E6FD9","#1F9D8A","#D9822B","#C9483F","#8A5CD1","#3F9A3F","#D1578A"];
+  for(let i=0;i<46;i++){const e=document.createElement("i");
+    e.style.cssText=`position:fixed;z-index:90;left:${50+(Math.random()-.5)*20}vw;top:40vh;width:8px;height:12px;background:${cols[i%7]};border-radius:2px;pointer-events:none`;
+    document.body.appendChild(e);
+    e.animate([{transform:"translate(0,0) rotate(0)",opacity:1},{transform:`translate(${(Math.random()-.5)*600}px,${200+Math.random()*300}px) rotate(${Math.random()*720}deg)`,opacity:0}],{duration:1400+Math.random()*600,easing:"cubic-bezier(.2,.7,.4,1)"}).onfinish=()=>e.remove();}
+}
+
+/* ===== drawer ===== */
+function openC(id){if(T&&T.id!==id)timerStop();openId=id;S.set.last=id;save();drawer()}
+function closeC(){timerStop();openId=null;drawer();render()}
+function nav(dir){
+  if(!openId)return;const i=ALL.findIndex(c=>c.id===openId);const n=ALL[i+dir];if(n)openC(n.id);
+}
+function drawer(){
+  const host=$("#drawer");
+  if(!openId){host.innerHTML="";return}
+  const old=$(".drawer",host);const sc=old?old.scrollTop:0;
+  const c=BY[openId],m=MON(c.m),r=R_(openId),st=r.st;
+  const running=T&&T.id===openId;
+  host.innerHTML=`<div class="scrim" onclick="closeC()"></div>
+  <aside class="drawer" role="dialog" aria-modal="true" aria-label="${esc(c.name)}" style="--c:${m.color}">
+    <div class="row spread"><div class="small muted">Month ${m.n} · ${esc(c.topic)}</div>
+      <div class="row"><button class="btn sm" onclick="nav(-1)" title="Previous (k)">Prev</button><button class="btn sm" onclick="nav(1)" title="Next (j)">Next</button><button class="btn sm" onclick="closeC()">Close</button></div></div>
+    <h2 style="margin-top:8px;font-size:1.6rem">${esc(c.name)}</h2>
+    <p class="read" style="margin-top:8px">${esc(c.learn)}</p>
+    <section><h4>Status</h4>
+      <div class="seg-btns" role="group" aria-label="Status">${STAT.map((s,i)=>`<button aria-pressed="${st===i}" onclick="setStatus('${c.id}',${i})">${s}</button>`).join("")}</div>
+      <div class="row spread" style="margin-top:12px">
+        <div class="stars" role="group" aria-label="Confidence">${[1,2,3,4,5].map(n=>`<button class="${r.conf>=n?"on":""}" aria-label="${n} stars" onclick="setConf('${c.id}',${n})">★</button>`).join("")}<span class="small muted"> confidence</span></div>
+        <div class="small muted">${r.due&&st>=2?`Next review ${nice(r.due)}`:"Review is scheduled once marked Understood"} · Last reviewed ${nice(r.rev)}</div></div>
+      <div class="row" style="margin-top:10px"><button class="btn sm" onclick="markRevised('${c.id}')">Mark as revised</button>
+        <span class="timer" id="timer-disp">${hm(r.time+(running?(Date.now()-T.start)/1000:0))}</span>
+        <button class="btn sm ${running?"danger":""}" onclick="timerToggle('${c.id}')">${running?"Stop timer":"Start timer"}</button></div></section>
+    <section><div class="row spread"><h4>My notes (Markdown)</h4><button class="btn sm" onclick="PV=!PV;drawer()">${PV?"Edit":"Preview"}</button></div>
+      ${PV?`<div class="preview">${md(r.notes)}</div>`:`<textarea id="notes" class="read" placeholder="Headings, lists, code blocks and $inline math$ are supported." oninput="fld('${c.id}','notes',this.value)">${esc(r.notes)}</textarea>`}</section>
+    <section><h4>Explain it in your own words</h4>
+      <textarea class="read" placeholder="Pretend you are teaching a friend. Where you get stuck is what to study next." oninput="fld('${c.id}','own',this.value)">${esc(r.own)}</textarea></section>
+    <section><div class="row spread"><h4>Deep-dive prompt</h4>
+      <div class="row"><select id="pv" style="width:auto"><option value="standard">Full lesson</option><option value="eli5">Explain like I'm 12</option><option value="interview">Interview me</option><option value="code">Code first</option><option value="math">Math first</option></select>
+      <button class="btn sm primary" onclick="copyPrompt('${c.id}')">Copy prompt</button></div></div>
+      <p class="small muted">Paste it into Claude or any LLM for a full lesson, then save the key points in your notes.</p></section>
+    <section><h4>Resources</h4>
+      ${r.res.length?r.res.map((x,i)=>`<div class="item"><input type="checkbox" ${x.done?"checked":""} aria-label="Done" onchange="toggleRes('${c.id}',${i})"><div class="grow"><a href="${esc(x.u)}" target="_blank" rel="noopener noreferrer">${esc(x.t)}</a> <span class="pill">${esc(x.k)}</span></div><button class="btn sm" onclick="delItem('${c.id}','res',${i})" aria-label="Remove">Remove</button></div>`).join(""):'<p class="small muted">Add the videos, articles, and docs you are using for this concept.</p>'}
+      <div class="row" style="margin-top:10px"><input id="r-title" type="text" placeholder="Title" style="flex:2;min-width:120px"><input id="r-url" type="url" placeholder="https://" style="flex:2;min-width:120px"><select id="r-type" style="flex:1;min-width:90px"><option>video</option><option>article</option><option>docs</option><option>book</option><option>course</option></select><button class="btn sm" onclick="addRes('${c.id}')">Add</button></div></section>
+    <section><h4>Practice and code snippets</h4>
+      ${r.sn.map((x,i)=>`<div class="snip"><header><span>${esc(x.l)}</span><span><button class="btn sm" onclick="copySnip('${c.id}',${i})">Copy</button> <button class="btn sm" onclick="delItem('${c.id}','sn',${i})">Remove</button></span></header><pre>${esc(x.c)}</pre></div>`).join("")}
+      <div style="margin-top:10px" class="grid"><input id="s-lang" type="text" placeholder="Language (python, bash…)"><textarea id="s-code" style="min-height:80px;font-family:var(--f-mono);font-size:.85rem" placeholder="Paste a snippet"></textarea><div><button class="btn sm" onclick="addSnip('${c.id}')">Add snippet</button></div></div></section>
+    <section><h4>Self-test cards</h4>
+      ${r.cards.map((k,i)=>`<div class="item"><div class="grow"><b>${esc(k.q)}</b><div class="small muted">${esc(k.a)}</div></div><button class="btn sm" onclick="delItem('${c.id}','cards',${i})">Remove</button></div>`).join("")||'<p class="small muted">Write your own questions. They appear in the Revision page as flashcards.</p>'}
+      <div class="grid" style="margin-top:10px"><input id="c-q" type="text" placeholder="Question"><input id="c-a" type="text" placeholder="Answer"><div><button class="btn sm" onclick="addCard('${c.id}')">Add card</button></div></div></section>
+  </aside>`;
+  const nd=$(".drawer",host);nd.scrollTop=sc;
+}
+
+/* ===== views ===== */
+let FILT={st:"",notes:false,due:false,low:false};
+function sidebar(){
+  const r=route();
+  const cu=currentUser();
+  $("#side").innerHTML=`<div class="brand"><i></i>AI Roadmap</div>
+  <div style="padding:4px 8px 12px">
+    ${cu?`<div class="card" style="padding:10px 12px;background:var(--surface2)">
+      <div class="row spread">
+        <div><b style="font-size:.9rem">${esc(cu.name)}</b> <span class="pill sm ${cu.role==='Admin'?'s3':cu.role==='Instructor'?'s1':''}">${esc(cu.role)}</span></div>
+        <button class="btn sm danger" onclick="logoutUser()" title="Logout">Out</button>
+      </div>
+      <div class="small muted" style="margin-top:4px">Code: <code>${esc(cu.code)}</code></div>
+    </div>`:`<a href="#/login" class="btn primary sm" style="display:block;text-align:center;text-decoration:none">🔑 User Login / Track Progress</a>`}
+  </div>
+  <nav class="nav" aria-label="Main">
+    <a href="#/" ${r.p==="home"?'aria-current="page"':""}>Dashboard</a>
+    <a href="#/python" ${r.p==="python"?'aria-current="page"':""}>Step 1: Python <span class="pct">${S.py.done?"done":""}</span></a>
+    <div class="sec">Months</div>
+    ${ROADMAP.map(m=>`<a href="#/month/${m.n}" style="--c:${m.color}" ${r.p==="month"&&r.n===m.n?'aria-current="page"':""}><span class="dot"></span>${m.n}. ${esc(m.short)}<span class="pct">${Math.round(mprog(m.n).p*100)}%</span></a>`).join("")}
+    <div class="sec">Review and reflect</div>
+    <a href="#/revision" ${r.p==="revision"?'aria-current="page"':""}>Revision <span class="pct">${dueList().length+dueCards().length||""}</span></a>
+    <a href="#/leaderboard" ${r.p==="leaderboard"?'aria-current="page"':""}>Leaderboard 🏆</a>
+    <a href="#/skills" ${r.p==="skills"?'aria-current="page"':""}>Skills checklist</a>
+    <a href="#/analytics" ${r.p==="analytics"?'aria-current="page"':""}>Analytics</a>
+    <div class="sec">Management & Account</div>
+    ${cu && cu.role==='Admin' ? `<a href="#/admin" ${r.p==="admin"?'aria-current="page"':""}>Admin Panel <span class="pct" style="color:var(--brand);font-weight:700">🔐</span></a>` : ''}
+    <a href="#/data" ${r.p==="data"?'aria-current="page"':""}>Data and settings</a>
+  </nav>
+  <div style="margin-top:auto;padding-top:14px" class="row"><button class="btn sm" style="flex:1" onclick="palette()">Search  Ctrl K</button><button class="btn sm" onclick="cycleTheme()" aria-label="Change theme">Theme</button></div>`;
+}
+function route(){
+  const h=location.hash.replace(/^#\/?/,"");const p=h.split("/");
+  if(p[0]==="month"&&MON(+p[1]))return{p:"month",n:+p[1]};
+  if(["python","revision","skills","analytics","data","admin","login","leaderboard"].includes(p[0]))return{p:p[0]};
+  return{p:"home"};
+}
+function cycleTheme(){const o=["auto","light","dark"];S.set.theme=o[(o.indexOf(S.set.theme)+1)%3];applyTheme();save();toast("Theme: "+S.set.theme)}
+function applyTheme(){const t=S.set.theme;if(t==="auto")document.documentElement.removeAttribute("data-theme");else document.documentElement.setAttribute("data-theme",t)}
+
+function heat(){
+  const t=new Date(),dow=t.getDay(),cells=11*7+dow+1;let h="";
+  const start=addDays(today(),-(cells-1));
+  for(let i=0;i<cells;i++){const d=addDays(start,i),n=S.log[d]||0;const l=n===0?"":n===1?"l1":n<4?"l2":n<7?"l3":"l4";
+    h+=`<i class="${l}" title="${d}: ${n} action${n===1?"":"s"}"></i>`}
+  return`<div class="heat" role="img" aria-label="Activity over the last 12 weeks">${h}</div>`;
+}
+function homeView(){
+  const o=oprog(),p=pace(),du=dueList().length+dueCards().length,wk=weekDone(),goal=+S.set.goal||1;
+  const fo=firstOpen();const cur=S.set.last&&BY[S.set.last]?BY[S.set.last]:fo;
+  const hereM=fo?fo.m:8;
+  const backupDue=Object.keys(S.c).length>3&&(!S.set.lastBackup?diffDays(S.set.firstUse,today())>=14:diffDays(S.set.lastBackup,today())>=14);
+  return`
+  ${!S.py.done?`<div class="banner"><span>Python is the prerequisite. Confirm your readiness before Month 1.</span><a class="btn sm" href="#/python" style="text-decoration:none">Open Python checkpoint</a></div>`:""}
+  ${backupDue?`<div class="banner"><span>It has been two weeks since your last backup.</span><a class="btn sm" href="#/data" style="text-decoration:none">Back up now</a></div>`:""}
+  <div class="hero">
+    <div class="row spread" style="align-items:flex-end">
+      <div><div class="bigpct">${Math.round(o.p*100)}%</div><p class="muted" style="margin-top:6px">${o.d} of ${o.t} concepts understood · ${p.label} for your ${nice(endDate())} finish</p></div>
+      <div class="row">${cur?`<button class="btn primary" onclick="openC('${cur.id}')">${S.set.last?"Continue":"Start"}: ${esc(cur.name)}</button>`:""}</div>
+    </div>
+    <div class="trail" style="margin-top:34px">${ROADMAP.map(m=>{const q=mprog(m.n);return`<a class="seg ${m.n===hereM?"here":""}" href="#/month/${m.n}" style="--c:${m.color}" aria-label="Month ${m.n}, ${Math.round(q.p*100)} percent"><div class="track"><i style="width:${q.p*100}%"></i></div><div class="lbl"><span class="num">${m.n}</span> ${esc(m.short)}</div></a>`}).join("")}</div>
+  </div>
+  <div class="grid g3" style="margin-top:26px">
+    <div class="card stat"><span class="muted small">Streak</span><b>${streak()} day${streak()===1?"":"s"}</b></div>
+    <div class="card stat"><span class="muted small">Time studied</span><b>${hm(totalTime())}</b></div>
+    <div class="card"><div class="stat"><span class="muted small">This week</span><b>${wk} / ${goal}</b></div><div class="bar" style="margin-top:8px"><i style="width:${Math.min(100,wk/goal*100)}%"></i></div></div>
+    <div class="card stat"><span class="muted small">Revision due</span><b>${du}</b>${du?`<a href="#/revision">Start revising</a>`:'<span class="small muted">Nothing due</span>'}</div>
+  </div>
+  <div class="grid g2" style="margin-top:16px">
+    <div class="card"><h3>Last 12 weeks</h3>${heat()}</div>
+    <div class="card"><h3>Schedule</h3>
+      <p class="small muted">Plan: ${nice(S.set.start)} to ${nice(endDate())}. Expected by today: ${Math.round(p.exp*100)}%. Actual: ${Math.round(p.act*100)}%.</p>
+      <div class="bar" style="margin:10px 0 4px"><i style="width:${p.exp*100}%;background:var(--line)"></i></div>
+      <div class="bar"><i style="width:${p.act*100}%"></i></div>
+      <p class="small" style="margin-top:8px"><b>${p.label}.</b> Change dates and weekly goal in <a href="#/data">settings</a>.</p></div>
+  </div>
+  <h2 style="margin:30px 0 14px">Months</h2>
+  <div class="grid g2">${ROADMAP.map(m=>{const q=mprog(m.n);const stt=q.d===0?"Not started":q.d===q.t?"Done":"In progress";
+    return`<a class="card mcard" href="#/month/${m.n}" style="--c:${m.color}"><div class="row spread"><span class="t">Month ${m.n}: ${esc(m.title)}</span><span class="pill ${q.d===q.t?"s3":q.d?"s1":""}">${stt}</span></div>
+    <p class="small muted" style="margin:6px 0 12px">${esc(m.outcome)}</p><div class="bar"><i style="width:${q.p*100}%"></i></div><div class="small muted" style="margin-top:6px">${q.d} of ${q.t} concepts</div></a>`}).join("")}</div>`;
+}
+
+function crow(c,m){
+  const r=R_(c.id),d=r.st>=2,t=today();
+  return`<div class="crow" style="--c:${m.color}" tabindex="0" onclick="openC('${c.id}')" onkeydown="if(event.key==='Enter')openC('${c.id}')">
+    <span class="cb" role="checkbox" aria-checked="${d}" aria-label="Mark ${esc(c.name)} understood" onclick="event.stopPropagation();toggleDone('${c.id}')">${d?"✓":""}</span>
+    <div><div class="nm">${esc(c.name)}</div><div class="ds">${esc(c.learn)}</div></div>
+    <div class="meta">${r.due&&d&&r.due<=t?'<span class="pill due">Review due</span>':""}${r.notes?'<span class="pill" title="Has notes">Notes</span>':""}${r.st?`<span class="pill s${r.st}">${STAT[r.st]}</span>`:""}</div></div>`;
+}
+function passes(c){const r=R_(c.id),t=today();
+  if(FILT.st!==""&&r.st!==+FILT.st)return false;
+  if(FILT.notes&&!r.notes)return false;
+  if(FILT.due&&!(r.st>=2&&r.due&&r.due<=t))return false;
+  if(FILT.low&&!(r.conf>0&&r.conf<=2))return false;
+  return true}
+function monthView(n){
+  const m=MON(n),q=mprog(n);
+  const prevOpen=S.set.lock&&n>1&&mprog(n-1).p<1;
+  const rem=m.cs.length-q.d;
+  const stages=m.stages.map((s,i)=>{const cs=m.cs.filter(c=>c.stage===i);const d=cs.filter(c=>done(c.id)).length;return{name:s[0],d,t:cs.length}});
+  const toolsTried=m.tools.filter((_,i)=>S.tl[`m${n}-tool-${i}`]).length;
+  const filt=FILT.st!==""||FILT.notes||FILT.due||FILT.low;
+  return`<div style="--c:${m.color}">
+  ${prevOpen?`<div class="banner">Month ${n-1} is not finished yet. The sequence matters, because each month builds on the one before.</div>`:""}
+  <div class="small muted">Month ${n} of 8</div>
+  <h1 style="color:var(--c)">${esc(m.title)}</h1>
+  <p class="read" style="margin:10px 0 14px;max-width:70ch">${esc(m.outcome)}</p>
+  <div class="row"><div style="flex:1;min-width:220px"><div class="bar"><i style="width:${q.p*100}%"></i></div></div><span class="small muted">${q.d} of ${q.t} done · about ${rem} concepts left</span></div>
+  <h2 style="margin-top:26px">Learning sequence</h2>
+  <div class="stepper">${stages.map((s,i)=>`<div class="step"><div class="sn">${i+1}. ${esc(s.name)}</div><div class="bar"><i style="width:${s.t?s.d/s.t*100:0}%"></i></div><div class="small muted" style="margin-top:4px">${s.d}/${s.t}</div></div>`).join("")}</div>
+  <div class="row spread" style="margin-bottom:10px"><h2>Topics and concepts</h2></div>
+  <div class="filters"><select aria-label="Status" onchange="FILT.st=this.value;render()"><option value="">Any status</option>${STAT.map((s,i)=>`<option value="${i}" ${FILT.st===String(i)?"selected":""}>${s}</option>`).join("")}</select>
+   <label class="btn sm"><input type="checkbox" ${FILT.notes?"checked":""} onchange="FILT.notes=this.checked;render()"> Has notes</label>
+   <label class="btn sm"><input type="checkbox" ${FILT.due?"checked":""} onchange="FILT.due=this.checked;render()"> Due for revision</label>
+   <label class="btn sm"><input type="checkbox" ${FILT.low?"checked":""} onchange="FILT.low=this.checked;render()"> Low confidence</label></div>
+  ${m.topics.map((t,ti)=>{const cs=m.cs.filter(c=>c.t===ti);const shown=cs.filter(passes);const d=cs.filter(c=>done(c.id)).length;
+    if(filt&&!shown.length)return"";
+    return`<details class="topic" ${filt||(d<cs.length&&(ti===0||m.cs.filter(c=>c.t<ti).every(c=>done(c.id))))?"open":""}><summary>Topic ${ti+1}: ${esc(t[0])}<span class="cnt">${d}/${cs.length}</span></summary>${shown.map(c=>crow(c,m)).join("")}</details>`}).join("")||""}
+  ${filt&&!m.cs.some(passes)?'<p class="muted">No concepts match these filters. Clear a filter to see more.</p>':""}
+  <h2 style="margin:30px 0 12px">Relevant tools</h2>
+  <div class="card"><div class="tablewrap"><table><thead><tr><th style="width:60px">Tried</th><th>Tool</th><th>What to understand</th></tr></thead><tbody>
+  ${m.tools.map((t,i)=>{const k=`m${n}-tool-${i}`;return`<tr><td><input type="checkbox" style="accent-color:${m.color};width:18px;height:18px" ${S.tl[k]?"checked":""} aria-label="Tried ${esc(t[0])}" onchange="S.tl['${k}']=this.checked;bump();save();render()"></td><td><b>${esc(t[0])}</b></td><td class="read">${esc(t[1])}</td></tr>`}).join("")}</tbody></table></div><p class="small muted" style="margin-top:8px">${toolsTried} of ${m.tools.length} tried</p></div>
+  <h2 style="margin:30px 0 12px">Knowledge checks</h2>
+  <div class="grid">${m.checks.map((c,i)=>{const k=`m${n}-chk-${i}`;const v=S.ck[k]||{};return`<div class="card"><label class="check"><input type="checkbox" ${v.done?"checked":""} onchange="ckSet('${k}','done',this.checked)"><span class="read">${esc(c)}</span></label>
+    <textarea style="min-height:70px;margin-top:10px" placeholder="What did you find out? Note anything that surprised you." oninput="ckSet('${k}','note',this.value,true)">${esc(v.note||"")}</textarea>
+    <input type="url" style="margin-top:8px" placeholder="Link to your GitHub repo or notebook (optional)" value="${esc(v.link||"")}" oninput="ckSet('${k}','link',this.value,true)"></div>`}).join("")}</div>
+  <h2 style="margin:30px 0 12px">Official documentation</h2>
+  <div class="card"><a href="${m.src[1]}" target="_blank" rel="noopener noreferrer">${esc(m.src[0])}</a>${m.src2?`<br><a href="${m.src2[1]}" target="_blank" rel="noopener noreferrer">${esc(m.src2[0])}</a>`:""}<p class="small muted" style="margin-top:6px">Framework APIs change. Check examples against this documentation.</p></div></div>`;
+}
+function ckSet(k,f,v,quiet){const o=S.ck[k]||(S.ck[k]={});o[f]=v;if(f==="done"){bump();ev((v?"Completed":"Unchecked")+" knowledge check")}clearTimeout(ckSet.t);ckSet.t=setTimeout(save,300);if(!quiet)render()}
+
+function pythonView(){
+  return`<h1>Step 1: Python</h1>
+  <p class="read" style="margin:10px 0 18px;max-width:68ch">Prerequisite only. Complete basic Python proficiency before Month 1, including the ability to read and write simple programs and use installed packages. This roadmap does not include a separate Python syllabus, so keep improving through the later examples.</p>
+  <div class="card"><label class="check"><input type="checkbox" ${S.py.done?"checked":""} onchange="S.py.done=this.checked;bump();save();render()"><span><b>Readiness checkpoint</b><br><span class="read">Be able to follow a short notebook, call a function, inspect an object, and understand common error messages.</span></span></label>
+  <textarea style="margin-top:14px" placeholder="Your notes: what you practised, what still feels shaky." oninput="S.py.notes=this.value;clearTimeout(window._pt);window._pt=setTimeout(save,300)">${esc(S.py.notes)}</textarea></div>`;
+}
+
+/* revision */
+let Rv={tab:"concepts",idx:0,flip:false};
+function revisionView(){
+  const dl=dueList(),dc=dueCards();
+  const tabs=`<div class="seg-btns" style="max-width:420px;margin:14px 0 20px;--c:var(--brand)"><button aria-pressed="${Rv.tab==="concepts"}" onclick="Rv.tab='concepts';Rv.idx=0;Rv.flip=false;render()">Concepts due (${dl.length})</button><button aria-pressed="${Rv.tab==="cards"}" onclick="Rv.tab='cards';Rv.idx=0;Rv.flip=false;render()">Flashcards (${dc.length})</button></div>`;
+  let body;
+  if(Rv.tab==="concepts"){
+    if(!dl.length)body=`<div class="card"><p>Nothing is due for review. Concepts you mark Understood return after 1, 3, 7, 14 and 30 days.</p></div>`;
+    else{const c=dl[Math.min(Rv.idx,dl.length-1)],r=R_(c.id),m=MON(c.m);
+      body=`<div class="card" style="border-top:5px solid ${m.color}"><div class="small muted">Month ${m.n} · ${esc(c.topic)} · ${Math.min(Rv.idx,dl.length-1)+1} of ${dl.length}</div>
+      <h2 style="margin:6px 0 8px">${esc(c.name)}</h2><p class="muted small">Explain this out loud before you look.</p>
+      ${Rv.flip?`<p class="read" style="margin-top:12px">${esc(c.learn)}</p>${r.own?`<div class="preview" style="margin-top:12px"><b>Your explanation</b><p>${esc(r.own)}</p></div>`:""}${r.notes?`<div class="preview" style="margin-top:12px">${md(r.notes)}</div>`:""}
+      <div class="row" style="margin-top:16px"><button class="btn danger" onclick="rate('${c.id}',0)">Forgot (1)</button><button class="btn" onclick="rate('${c.id}',1)">Hard (2)</button><button class="btn primary" onclick="rate('${c.id}',2)">Good (3)</button><button class="btn" onclick="rate('${c.id}',3)">Easy (4)</button><button class="btn sm" onclick="openC('${c.id}')">Open concept</button></div>`
+      :`<div style="margin-top:16px"><button class="btn primary" onclick="Rv.flip=true;render()">Show answer (space)</button></div>`}</div>`}
+  }else{
+    if(!dc.length)body=`<div class="card"><p>No flashcards are due. Add questions in a concept's "Self-test cards" section.</p></div>`;
+    else{const x=dc[Math.min(Rv.idx,dc.length-1)],c=BY[x.id];
+      body=`<div class="small muted" style="margin-bottom:8px">${esc(c.name)} · ${Math.min(Rv.idx,dc.length-1)+1} of ${dc.length}</div>
+      <div class="fc ${Rv.flip?"back":""}" tabindex="0" onclick="Rv.flip=!Rv.flip;render()" onkeydown="if(event.key==='Enter')Rv.flip=!Rv.flip,render()">${esc(Rv.flip?x.k.a:x.k.q)}</div>
+      <div class="row" style="margin-top:14px;justify-content:center">${Rv.flip?`<button class="btn danger" onclick="rateCard('${x.id}',${x.i},0)">Forgot (1)</button><button class="btn" onclick="rateCard('${x.id}',${x.i},1)">Hard (2)</button><button class="btn primary" onclick="rateCard('${x.id}',${x.i},2)">Good (3)</button><button class="btn" onclick="rateCard('${x.id}',${x.i},3)">Easy (4)</button>`:`<button class="btn primary" onclick="Rv.flip=true;render()">Flip card (space)</button>`}</div>`}
+  }
+  return`<h1>Revision</h1><p class="muted" style="margin-top:6px">Rate how well you recalled each item. Keyboard: space flips, 1 to 4 rate.</p>${tabs}${body}`;
+}
+
+/* skills */
+function radar(vals,labels){
+  const cx=260,cy=210,r=140,n=vals.length;
+  const pt=(i,v)=>{const a=-Math.PI/2+i*2*Math.PI/n;return[cx+Math.cos(a)*r*v,cy+Math.sin(a)*r*v]};
+  let g="";[.25,.5,.75,1].forEach(k=>{g+=`<polygon points="${vals.map((_,i)=>pt(i,k).join(",")).join(" ")}" fill="none" stroke="var(--line)"/>`});
+  vals.forEach((_,i)=>{const[x,y]=pt(i,1);g+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="var(--line)"/>`;
+    const[lx,ly]=pt(i,1.16);const an=lx<cx-10?"end":lx>cx+10?"start":"middle";g+=`<text x="${lx}" y="${ly+3}" font-size="10" text-anchor="${an}">${esc(labels[i])}</text>`});
+  g+=`<polygon points="${vals.map((v,i)=>pt(i,Math.max(v,.02)).join(",")).join(" ")}" fill="var(--brand)" fill-opacity=".22" stroke="var(--brand)" stroke-width="2"/>`;
+  return`<svg viewBox="0 0 520 420" role="img" aria-label="Skill levels radar chart" style="width:100%;max-width:560px">${g}</svg>`;
+}
+function skillsView(){
+  const vals=SKILLS.map((_,i)=>(S.sk[i]?.level||0)/100);
+  const dn=SKILLS.filter((_,i)=>S.sk[i]?.done).length;
+  return`<h1>Skills I should have after 8 months</h1>
+  <p class="read" style="margin:10px 0 18px;max-width:68ch">Beginner-to-intermediate practical level. This does not imply expert mastery. ${dn} of ${SKILLS.length} checked.</p>
+  <div class="grid g2" style="align-items:start">
+  <div class="card">${SKILLS.map((s,i)=>{const o=S.sk[i]||{};return`<div style="padding:10px 0;border-bottom:1px solid var(--line)"><label class="check"><input type="checkbox" ${o.done?"checked":""} onchange="skSet(${i},'done',this.checked)"><span><b>${esc(s[0])}</b><br><span class="read small muted">${esc(s[1])}</span></span></label>
+    <div class="row" style="margin:8px 0 0 28px"><input type="range" min="0" max="100" step="5" value="${o.level||0}" style="flex:1;min-width:120px;accent-color:var(--brand)" aria-label="${esc(s[0])} self-assessment" oninput="skSet(${i},'level',+this.value,true);this.nextElementSibling.textContent=this.value+'%'"><span class="small" style="width:40px">${o.level||0}%</span></div>
+    <div class="small" style="margin:6px 0 0 28px">Built in ${s[2].length>=8?"all months":s[2].map(n=>`<a href="#/month/${n}">Month ${n}</a>`).join(", ")}</div></div>`}).join("")}</div>
+  <div class="card" style="position:sticky;top:16px"><h3>Self-assessment radar</h3>${radar(vals,SKILLS.map(s=>s[0]))}</div></div>`;
+}
+function skSet(i,f,v,quiet){const o=S.sk[i]||(S.sk[i]={});o[f]=v;if(f==="done"){bump();ev((v?"Checked skill: ":"Unchecked skill: ")+SKILLS[i][0])}clearTimeout(skSet.t);skSet.t=setTimeout(()=>{save();if(quiet){const el=$(".card[style*=sticky]");if(el)el.innerHTML=`<h3>Self-assessment radar</h3>${radar(SKILLS.map((_,j)=>(S.sk[j]?.level||0)/100),SKILLS.map(s=>s[0]))}`}},120);if(!quiet)render()}
+
+/* analytics */
+function burnup(){
+  const s=S.set.start,e=endDate(),tot=ALL.length,span=Math.max(1,diffDays(s,e)),W_=680,H=250,P=38;
+  const doneDates=ALL.map(c=>R_(c.id)).filter(r=>r.st>=2&&r.doneAt).map(r=>r.doneAt).sort();
+  const xs=d=>P+Math.max(0,Math.min(1,diffDays(s,d)/span))*(W_-P-12),ys=v=>H-28-(v/tot)*(H-50);
+  const t=today();const days=Math.max(0,Math.min(span,diffDays(s,t)));
+  let pts=[];for(let d=0;d<=days;d+=Math.max(1,Math.floor(days/80))){const ds=addDays(s,d);pts.push([xs(ds),ys(doneDates.filter(x=>x<=ds).length)])}
+  const ds=addDays(s,days);pts.push([xs(ds),ys(doneDates.filter(x=>x<=ds).length)]);
+  let g=[0,.25,.5,.75,1].map(k=>`<line x1="${P}" x2="${W_-12}" y1="${ys(tot*k)}" y2="${ys(tot*k)}" stroke="var(--line)"/><text x="${P-6}" y="${ys(tot*k)+3}" font-size="10" text-anchor="end">${Math.round(tot*k)}</text>`).join("");
+  g+=`<line x1="${xs(s)}" y1="${ys(0)}" x2="${xs(e)}" y2="${ys(tot)}" stroke="var(--muted)" stroke-dasharray="5 4" stroke-width="2"/>`;
+  g+=`<polyline fill="none" stroke="var(--brand)" stroke-width="3" points="${pts.map(p=>p.join(",")).join(" ")}"/>`;
+  g+=`<text x="${P}" y="${H-8}" font-size="10">${nice(s)}</text><text x="${W_-12}" y="${H-8}" font-size="10" text-anchor="end">${nice(e)}</text>`;
+  return`<svg viewBox="0 0 ${W_} ${H}" role="img" aria-label="Burn-up chart of concepts completed versus plan" style="width:100%">${g}</svg>
+  <div class="legend"><span><i style="background:var(--brand)"></i>Actual</span><span><i style="background:var(--muted)"></i>Planned</span></div>`;
+}
+function bars(items,fmtv){
+  const max=Math.max(1,...items.map(i=>i.v));
+  return`<div style="display:grid;gap:8px">${items.map(i=>`<div class="row" style="flex-wrap:nowrap"><span class="small" style="width:120px;flex:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(i.l)}</span><div class="bar" style="flex:1;--c:${i.c}"><i style="width:${i.v/max*100}%"></i></div><span class="small muted" style="width:56px;text-align:right">${fmtv(i.v)}</span></div>`).join("")}</div>`;
+}
+function donut(){
+  const cnt=[0,0,0,0];ALL.forEach(c=>cnt[R_(c.id).st]++);const tot=ALL.length;
+  const cols=["var(--line)","var(--warn)","#5AA6E0","var(--ok)"];let off=0;
+  const R=52,C=2*Math.PI*R;
+  const arcs=cnt.map((n,i)=>{const len=n/tot*C;const s=`<circle r="${R}" cx="70" cy="70" fill="none" stroke="${cols[i]}" stroke-width="22" stroke-dasharray="${len} ${C-len}" stroke-dashoffset="${-off}" transform="rotate(-90 70 70)"/>`;off+=len;return s}).join("");
+  return`<div class="row"><svg viewBox="0 0 140 140" width="140" height="140" role="img" aria-label="Status distribution">${arcs}</svg><div class="legend" style="flex-direction:column">${STAT.map((s,i)=>`<span><i style="background:${cols[i]}"></i>${s}: ${cnt[i]}</span>`).join("")}</div></div>`;
+}
+function analyticsView(){
+  const pm=ROADMAP.map(m=>({l:`${m.n}. ${m.short}`,c:m.color,v:m.cs.reduce((a,c)=>a+R_(c.id).time,0)}));
+  const wd=[0,0,0,0,0,0,0];Object.entries(S.time).forEach(([d,s])=>wd[pd(d).getDay()]+=s);
+  const names=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  const weak=ALL.filter(c=>R_(c.id).conf>0).sort((a,b)=>R_(a.id).conf-R_(b.id).conf).slice(0,8);
+  return`<h1>Analytics</h1>
+  <div class="grid g2" style="margin-top:18px">
+  <div class="card" style="grid-column:1/-1"><h3>Progress against plan</h3>${burnup()}</div>
+  <div class="card"><h3>Time studied per month</h3>${bars(pm,hm)}</div>
+  <div class="card"><h3>Time by day of week</h3>${bars(wd.map((v,i)=>({l:names[i],c:"var(--brand)",v})),hm)}</div>
+  <div class="card"><h3>Status</h3>${donut()}</div>
+  <div class="card"><h3>Weakest areas</h3>${weak.length?weak.map(c=>`<div class="item"><div class="grow"><a href="javascript:void 0" onclick="openC('${c.id}')">${esc(c.name)}</a><div class="small muted">Month ${c.m}</div></div><span style="color:#E0A526">${"★".repeat(R_(c.id).conf)}</span></div>`).join(""):'<p class="small muted">Rate your confidence on concepts to see where you are weakest.</p>'}</div>
+  <div class="card" style="grid-column:1/-1"><h3>Recent activity</h3>${S.ev.length?S.ev.slice(0,15).map(e=>`<div class="item"><div class="grow">${e.id?`<a href="javascript:void 0" onclick="openC('${e.id}')">${esc(e.txt)}</a>`:esc(e.txt)}</div><span class="small muted">${new Date(e.t).toLocaleString(undefined,{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}</span></div>`).join(""):'<p class="small muted">Your activity will appear here.</p>'}</div></div>`;
+}
+
+/* data */
+let resetStep=0;
+function dataView(){
+  return`<h1>Data and settings</h1>
+  <div class="grid g2" style="margin-top:18px">
+  <div class="card"><h3>Schedule and goals</h3>
+    <label class="small muted">Start date</label><input type="date" value="${S.set.start}" onchange="S.set.start=this.value||today();save();render()">
+    <label class="small muted" style="display:block;margin-top:10px">Weekly goal (concepts per week)</label><input type="number" min="1" max="100" value="${S.set.goal}" onchange="S.set.goal=+this.value||1;save();render()">
+    <label class="check" style="margin-top:12px"><input type="checkbox" ${S.set.lock?"checked":""} onchange="S.set.lock=this.checked;save();render()"><span>Warn me when I open a month before finishing the previous one</span></label>
+    <label class="small muted" style="display:block;margin-top:12px">Theme</label><select onchange="S.set.theme=this.value;applyTheme();save()"><option value="auto" ${S.set.theme==="auto"?"selected":""}>Match my device</option><option value="light" ${S.set.theme==="light"?"selected":""}>Light</option><option value="dark" ${S.set.theme==="dark"?"selected":""}>Dark</option></select></div>
+  <div class="card"><h3>Back up</h3><p class="small muted">Everything lives in this browser only. Copy the backup text and keep it somewhere safe. Last backup: ${nice(S.set.lastBackup)}.</p>
+    <textarea id="exp" readonly style="min-height:90px;font-family:var(--f-mono);font-size:.78rem;margin-top:8px"></textarea>
+    <div class="row" style="margin-top:8px"><button class="btn primary" onclick="doExport()">Create and copy backup</button></div></div>
+  <div class="card"><h3>Restore</h3><textarea id="imp" placeholder="Paste backup text here" style="min-height:90px;font-family:var(--f-mono);font-size:.78rem"></textarea>
+    <div class="row" style="margin-top:8px"><select id="impmode" style="width:auto"><option value="merge">Merge with current progress</option><option value="over">Replace current progress</option></select><button class="btn" onclick="doImport()">Restore</button></div></div>
+  <div class="card"><h3>Export notes</h3><div class="row"><select id="nm" style="width:auto">${ROADMAP.map(m=>`<option value="${m.n}">Month ${m.n}: ${esc(m.short)}</option>`).join("")}</select><button class="btn" onclick="doNotes()">Show notes as Markdown</button></div>
+    <textarea id="notesout" readonly style="min-height:120px;margin-top:8px;font-family:var(--f-mono);font-size:.78rem"></textarea><div class="row" style="margin-top:8px"><button class="btn sm" onclick="copy($('#notesout').value)">Copy</button></div></div>
+  <div class="card" style="grid-column:1/-1;border-color:var(--bad)"><h3>Reset progress</h3><p class="small muted">This deletes all progress, notes, and settings from this browser.</p>
+    ${resetStep===0?`<button class="btn danger" style="margin-top:8px" onclick="resetStep=1;render()">Reset everything</button>`:`<p style="margin-top:8px"><b>Are you sure?</b> Type RESET to confirm.</p><div class="row" style="margin-top:8px"><input id="rs" type="text" style="max-width:200px" placeholder="RESET"><button class="btn danger" onclick="doReset()">Delete everything</button><button class="btn" onclick="resetStep=0;render()">Cancel</button></div>`}</div></div>`;
+}
+function doExport(){S.set.lastBackup=today();save();const t=JSON.stringify(S);$("#exp").value=t;copy(t);render();$("#exp").value=t}
+function doImport(){
+  let o;try{o=JSON.parse($("#imp").value)}catch(e){toast("That is not valid backup text");return}
+  if(!o||typeof o!=="object"||o.v!==1||typeof o.c!=="object"){toast("This does not look like an AI Roadmap backup");return}
+  if($("#impmode").value==="over"){S=Object.assign(blank(),o)}
+  else{
+    Object.entries(o.c).forEach(([id,r])=>{if(!BY[id])return;const cur=S.c[id];if(!cur||(r.st||0)>=cur.st)S.c[id]=Object.assign(dflt(),cur||{},r)});
+    Object.assign(S.ck,o.ck||{});Object.assign(S.tl,o.tl||{});Object.assign(S.sk,o.sk||{});
+    Object.entries(o.log||{}).forEach(([d,n])=>S.log[d]=Math.max(S.log[d]||0,n));
+    Object.entries(o.time||{}).forEach(([d,n])=>S.time[d]=Math.max(S.time[d]||0,n));
+    if(o.py?.done)S.py.done=true;if(o.py?.notes&&!S.py.notes)S.py.notes=o.py.notes;
+  }
+  save();applyTheme();toast("Backup restored");render();
+}
+function doNotes(){
+  const m=MON(+$("#nm").value);let out=`# Month ${m.n}: ${m.title}\n\n`;
+  m.topics.forEach((t,ti)=>{const cs=m.cs.filter(c=>c.t===ti&&(R_(c.id).notes||R_(c.id).own));if(!cs.length)return;out+=`## ${t[0]}\n\n`;
+    cs.forEach(c=>{const r=R_(c.id);out+=`### ${c.name}\n\n${r.own?`**In my words:** ${r.own}\n\n`:""}${r.notes?r.notes+"\n\n":""}`})});
+  $("#notesout").value=out.trim()===`# Month ${m.n}: ${m.title}`?"No notes in this month yet.":out;
+}
+function doReset(){if($("#rs").value!=="RESET"){toast("Type RESET exactly to confirm");return}
+  S=blank();resetStep=0;save();toast("Progress reset");render()}
+
+/* ===== Admin Panel & User Management ===== */
+let adminAuthed=false;
+let editingUserId=null;
+let activeUserCode=localStorage.getItem("airt_active_user")||null;
+
+function currentUser(){
+  if(!activeUserCode) return null;
+  const users=getUsers();
+  return users.find(u=>u.code.toLowerCase()===activeUserCode.toLowerCase()) || null;
+}
+
+function getAdminKey(){return S.set.adminPass||"ashu"}
+
+const USERS_DB_KEY = "airt_users_db";
+const FIREBASE_CONFIG_KEY = "airt_firebase_config";
+
+// Project's default Firebase credentials
+const DEFAULT_FIREBASE_CONFIG = {
+  apiKey: "AIzaSyAJkrR67D8jnC6BX9JobOrESJYCIE36Clg",
+  authDomain: "learning-64025.firebaseapp.com",
+  projectId: "learning-64025",
+  storageBucket: "learning-64025.firebasestorage.app",
+  messagingSenderId: "702316755219",
+  appId: "1:702316755219:web:e3313d6e05a2dae8e5c2e6",
+  measurementId: "G-PXW9K2542E"
+};
+
+let fbApp = null;
+let fbDb = null;
+let fbConnected = false;
+
+function getFirebaseConfig(){
+  try {
+    const raw = localStorage.getItem(FIREBASE_CONFIG_KEY);
+    if(raw) return JSON.parse(raw);
+  } catch(e){}
+  return DEFAULT_FIREBASE_CONFIG;
+}
+
+function initFirebase(){
+  const cfg = getFirebaseConfig();
+  if(!cfg || !cfg.apiKey || !cfg.projectId) return;
+  try {
+    if(!firebase.apps.length){
+      fbApp = firebase.initializeApp(cfg);
+    } else {
+      fbApp = firebase.app();
+    }
+    fbDb = firebase.firestore();
+    fbConnected = true;
+    console.log("Firebase Cloud Firestore connected!");
+
+    // Listen to real-time student updates across all devices globally
+    fbDb.collection("users").onSnapshot(snapshot => {
+      if(!snapshot.empty){
+        const cloudUsers = [];
+        snapshot.forEach(doc => {
+          cloudUsers.push(doc.data());
+        });
+        if(cloudUsers.length > 0){
+          const local = getUsers();
+          // Merge cloud users with local users
+          cloudUsers.forEach(cu => {
+            const idx = local.findIndex(l => l.code.toLowerCase() === cu.code.toLowerCase());
+            if(idx !== -1){
+              local[idx] = Object.assign({}, local[idx], cu);
+            } else {
+              local.push(cu);
+            }
+          });
+          persistUsers(local, false); // persist locally without re-uploading
+          render();
+        }
+      }
+    }, err => {
+      console.warn("Firestore snapshot error:", err);
+    });
+  } catch(e){
+    console.error("Firebase init failed:", e);
+    fbConnected = false;
+  }
+}
+
+async function loginWithGoogle(){
+  const cfg = getFirebaseConfig();
+  if(!cfg || !cfg.apiKey){
+    toast("Firebase is not connected yet. Paste config in Admin Panel or use passcode.");
+    return;
+  }
+  if(!firebase.auth){
+    toast("Firebase Auth is loading. Please try again.");
+    return;
+  }
+  try {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    const result = await firebase.auth().signInWithPopup(provider);
+    const gUser = result.user;
+    if(!gUser){return;}
+
+    const users = getUsers();
+    const email = (gUser.email || "").toLowerCase().trim();
+    // Match by email or username
+    let found = users.find(u => u.email && u.email.toLowerCase().trim() === email);
+
+    // If student signs in with Google for the first time, auto-create their account!
+    if(!found){
+      const safeCode = (gUser.displayName || "student")
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "")
+        .slice(0, 15) || ("user" + Date.now().toString().slice(-4));
+      
+      // Ensure unique code
+      let finalCode = safeCode;
+      let counter = 1;
+      while(users.some(u => u.code.toLowerCase() === finalCode.toLowerCase())){
+        finalCode = safeCode + counter;
+        counter++;
+      }
+
+      found = {
+        id: "u_g_" + gUser.uid,
+        name: gUser.displayName || "Google Learner",
+        email: email,
+        code: finalCode,
+        role: (email === "ashutosh@example.com" || finalCode === "ashu") ? "Admin" : "Student",
+        status: "Active",
+        photo: gUser.photoURL || null,
+        created: today(),
+        progress: {}
+      };
+      users.push(found);
+      persistUsers(users, true);
+    }
+
+    if(found.status === 'Inactive'){
+      toast("Your account is inactive. Contact admin.");
+      return;
+    }
+
+    activeUserCode = found.code;
+    localStorage.setItem("airt_active_user", found.code);
+    adminAuthed = (found.role === 'Admin' || found.code.toLowerCase() === 'ashu');
+
+    // Sync progress if stored in profile
+    if(found.progress && typeof found.progress === 'object' && Object.keys(found.progress).length > 0){
+      S.c = Object.assign({}, S.c, found.progress);
+      save();
+    }
+
+    toast(`Welcome, ${found.name}! Signed in with Google.`);
+    location.hash = "#/";
+    render();
+  } catch(err){
+    console.error("Google Auth error:", err);
+    if(err.code === 'auth/popup-closed-by-user'){
+      toast("Sign-in cancelled");
+    } else if(err.code === 'auth/unauthorized-domain'){
+      toast("Domain not authorized in Firebase Console! See setup steps.");
+    } else {
+      toast("Google Sign-In error: " + (err.message || err.code));
+    }
+  }
+}
+
+function defaultUsers(){
+  return [
+    {id:"u_admin_ashu",name:"Ashutosh Temgire",email:"ashutosh@example.com",code:"ashu",role:"Admin",status:"Active",created:today(),progress:{}}
+  ];
+}
+
+function getUsers(){
+  let rawUsers = null;
+  try {
+    const fromStorage = localStorage.getItem(USERS_DB_KEY);
+    if(fromStorage){
+      rawUsers = JSON.parse(fromStorage);
+    }
+  } catch(e){}
+
+  if(!rawUsers || !Array.isArray(rawUsers) || rawUsers.length === 0){
+    if(S.users && Array.isArray(S.users) && S.users.length > 0){
+      rawUsers = S.users;
+    } else {
+      rawUsers = defaultUsers();
+    }
+  }
+
+  // Guarantee that admin 'ashu' is always present in users list
+  const hasAshu = rawUsers.some(u => u.code && u.code.toLowerCase().trim() === "ashu");
+  if(!hasAshu){
+    rawUsers.unshift({
+      id:"u_admin_ashu",
+      name:"Ashutosh Temgire",
+      email:"ashutosh@example.com",
+      code:"ashu",
+      role:"Admin",
+      status:"Active",
+      created:today(),
+      progress:{}
+    });
+  }
+
+  // ensure all users have clean code and progress object
+  rawUsers.forEach((u,idx)=>{
+    if(!u.code){
+      u.code = u.name.toLowerCase().replace(/[^a-z0-9_-]/g,"")+(idx+1);
+    }
+    u.code = u.code.trim();
+    if(!u.progress) u.progress = {};
+  });
+
+  S.users = rawUsers;
+  try {
+    localStorage.setItem(USERS_DB_KEY, JSON.stringify(rawUsers));
+  } catch(e){}
+  return rawUsers;
+}
+
+function persistUsers(usersList, syncToCloud = true){
+  S.users = usersList;
+  try {
+    localStorage.setItem(USERS_DB_KEY, JSON.stringify(usersList));
+  } catch(e){}
+  save();
+
+  // Sync to Firebase Cloud if connected
+  if(syncToCloud && fbDb){
+    usersList.forEach(u => {
+      fbDb.collection("users").doc(u.code.toLowerCase()).set(u, { merge: true })
+        .catch(err => console.warn("Cloud sync failed for", u.code, err));
+    });
+  }
+}
+
+// Generate a secure invite payload for sharing directly with students
+function generateInviteLink(user){
+  const payload = {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    code: user.code,
+    role: user.role || 'Student',
+    status: user.status || 'Active'
+  };
+  const token = btoa(encodeURIComponent(JSON.stringify(payload)));
+  const base = location.origin + location.pathname;
+  return `${base}#/login?invite=${token}`;
+}
+
+function checkUrlInviteAndAutoLogin(){
+  try {
+    const hash = location.hash;
+    const search = location.search;
+    let token = null;
+
+    if(hash.includes("invite=")){
+      token = hash.split("invite=")[1].split("&")[0];
+    } else if(search.includes("invite=")){
+      const params = new URLSearchParams(search);
+      token = params.get("invite");
+    }
+
+    if(token){
+      const decoded = decodeURIComponent(atob(token));
+      const invited = JSON.parse(decoded);
+      if(invited && invited.code){
+        const users = getUsers();
+        const existing = users.find(u => u.code.toLowerCase() === invited.code.toLowerCase());
+        if(!existing){
+          users.push({
+            id: invited.id || "u_" + Date.now(),
+            name: invited.name || "Student",
+            email: invited.email || "",
+            code: invited.code,
+            role: invited.role || "Student",
+            status: "Active",
+            created: today(),
+            progress: {}
+          });
+          persistUsers(users);
+        }
+        // Auto-fill and log the student in
+        activeUserCode = invited.code;
+        localStorage.setItem("airt_active_user", invited.code);
+        toast(`Welcome to your roadmap, ${invited.name}!`);
+        // Clean URL
+        history.replaceState(null, "", location.pathname + "#/");
+        return true;
+      }
+    }
+  } catch(e){
+    console.error("Invite token error:", e);
+  }
+  return false;
+}
+
+function copyInviteLink(userId){
+  const users = getUsers();
+  const target = users.find(u => u.id === userId);
+  if(!target){toast("User not found");return;}
+  const link = generateInviteLink(target);
+  copy(link);
+  toast(`Invite link copied for ${target.name}! Send it to them.`);
+}
+
+function loginUser(e){
+  e&&e.preventDefault();
+  const inputEl=$("#userCodeInput");
+  const rawInput=inputEl?inputEl.value:"";
+  const clean=rawInput.trim().toLowerCase();
+  if(!clean){toast("Please enter your nickname / passcode");return}
+
+  const users=getUsers();
+  // Match by code/passcode, exact full name, or email address
+  let found=users.find(u=>
+    (u.code && u.code.trim().toLowerCase()===clean) ||
+    (u.name && u.name.trim().toLowerCase()===clean) ||
+    (u.email && u.email.trim().toLowerCase()===clean)
+  );
+
+  // Fallback: If username is "ashu", always ensure admin login succeeds
+  if(!found && clean==="ashu"){
+    found={
+      id:"u_admin_ashu",
+      name:"Ashutosh Temgire",
+      email:"ashutosh@example.com",
+      code:"ashu",
+      role:"Admin",
+      status:"Active",
+      created:today(),
+      progress:{}
+    };
+    if(!S.users) S.users=[];
+    S.users.unshift(found);
+    persistUsers(S.users);
+  }
+
+  if(found){
+    if(found.status==='Inactive'){
+      toast("Your account is currently inactive. Contact admin.");
+      return;
+    }
+    activeUserCode=found.code;
+    localStorage.setItem("airt_active_user",found.code);
+    
+    // Automatically authorize admin when admin logs in
+    if(found.role==='Admin' || (found.code && found.code.toLowerCase()==='ashu')){
+      adminAuthed=true;
+    } else {
+      adminAuthed=false;
+    }
+
+    // Sync user progress into active state if present
+    if(found.progress&&typeof found.progress==='object'&&Object.keys(found.progress).length>0){
+      S.c=Object.assign({},S.c,found.progress);
+      save();
+    }
+
+    toast(`Welcome back, ${found.name}!`);
+    location.hash="#/";
+    render();
+  } else {
+    toast("Invalid username / passcode!");
+  }
+}
+
+function logoutUser(){
+  activeUserCode=null;
+  adminAuthed=false;
+  localStorage.removeItem("airt_active_user");
+  toast("Logged out successfully");
+  location.hash="#/login";
+  render();
+}
+
+function saveActiveUserProgress(){
+  const cu=currentUser();
+  if(cu){
+    cu.progress=Object.assign({},S.c);
+    save();
+  }
+}
+
+function loginView(){
+  const cu=currentUser();
+  if(cu){
+    const o=oprog();
+    return `
+    <div style="max-width:560px;margin:30px auto" class="card">
+      <div class="row spread" style="margin-bottom:12px">
+        <div class="row">
+          <span style="font-size:2rem">👤</span>
+          <div>
+            <h2>${esc(cu.name)}</h2>
+            <p class="small muted">${esc(cu.email)} · <span class="pill ${cu.role==='Admin'?'s3':cu.role==='Instructor'?'s1':''}">${esc(cu.role)}</span></p>
+          </div>
+        </div>
+        <button class="btn sm danger" onclick="logoutUser()">Log out</button>
+      </div>
+
+      <div class="grid g2" style="margin-top:16px">
+        <div class="card stat" style="background:var(--surface2)">
+          <span class="muted small">Login Code / Passcode</span>
+          <b><code>${esc(cu.code)}</code></b>
+        </div>
+        <div class="card stat" style="background:var(--surface2)">
+          <span class="muted small">Roadmap Progress</span>
+          <b>${Math.round(o.p*100)}%</b>
+        </div>
+      </div>
+
+      <p class="small muted" style="margin-top:14px">Your learning progress and notes are saved to your account. You can log in on any device using your passcode code: <code>${esc(cu.code)}</code>.</p>
+      
+      <div class="row" style="margin-top:16px;gap:10px">
+        <a href="#/" class="btn primary" style="flex:1;text-align:center;text-decoration:none">Go to Dashboard</a>
+        ${cu.role==='Admin'?`<a href="#/admin" class="btn" style="text-align:center;text-decoration:none">🔐 Open Admin Panel</a>`:''}
+      </div>
+    </div>`;
+  }
+
+  return `
+  <div style="max-width:440px;margin:40px auto" class="card">
+    <div class="row" style="margin-bottom:12px">
+      <span style="font-size:2.2rem">🚀</span>
+      <div>
+        <h2>Learner Portal Login</h2>
+        <p class="small muted">Sign in directly with Google or enter your passcode to access your learning roadmap.</p>
+      </div>
+    </div>
+
+    <button onclick="loginWithGoogle()" class="btn" style="width:100%;margin-top:14px;padding:12px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:10px;background:#ffffff;color:#1f1f1f;border:1px solid #dadce0;box-shadow:0 1px 3px rgba(0,0,0,0.08);border-radius:8px">
+      <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.616z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/><path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.347 6.175 0 7.55 0 9s.347 2.825.957 4.039l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z"/></svg>
+      Continue with Google
+    </button>
+
+    <div class="row" style="margin:16px 0;align-items:center;text-align:center">
+      <div style="flex:1;height:1px;background:var(--line)"></div>
+      <span class="small muted" style="padding:0 10px;text-transform:uppercase;font-size:.75rem;letter-spacing:.05em">or passcode</span>
+      <div style="flex:1;height:1px;background:var(--line)"></div>
+    </div>
+
+    <form onsubmit="loginUser(event)" class="grid">
+      <div>
+        <label class="small muted" style="display:block;margin-bottom:6px;font-weight:600">Username / Passcode</label>
+        <input type="text" id="userCodeInput" placeholder="e.g. akshu" required style="width:100%;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:11px;font-size:1.02rem" autocomplete="off">
+      </div>
+      <button type="submit" class="btn primary" style="padding:11px;font-size:1rem;font-weight:600">Sign In with Passcode</button>
+    </form>
+
+    <div style="margin-top:20px;padding-top:14px;border-top:1px solid var(--line);text-align:center">
+      <p class="small muted">Admin (<code>ashu</code>) or registered students can log in with passcode.<br>Google login automatically sets up your personal roadmap.</p>
+    </div>
+  </div>`;
+}
+
+let viewingReportUserId=null;
+
+function openStudentReport(id){
+  viewingReportUserId=id;
+  render();
+}
+
+function closeStudentReport(){
+  viewingReportUserId=null;
+  render();
+}
+
+function checkAdminPass(e){
+  e&&e.preventDefault();
+  const pwd=$("#adminPassInput")?$("#adminPassInput").value:"";
+  if(pwd===getAdminKey()){
+    adminAuthed=true;
+    toast("Welcome to Admin Panel");
+    render();
+  } else {
+    toast("Incorrect Admin Password!");
+  }
+}
+
+function lockAdmin(){
+  adminAuthed=false;
+  toast("Admin Panel locked");
+  render();
+}
+
+function setAdminPass(){
+  const np=$("#newAdminPass").value.trim();
+  if(!np||np.length<4){toast("Password must be at least 4 chars");return}
+  S.set.adminPass=np;
+  save();
+  toast("Admin Password updated successfully!");
+  render();
+}
+
+function saveUserForm(e){
+  e&&e.preventDefault();
+  const name=$("#u-name").value.trim();
+  const email=$("#u-email").value.trim();
+  const code=$("#u-code").value.trim().toLowerCase().replace(/[^a-z0-9_-]/g,"");
+  const role=$("#u-role").value;
+  const status=$("#u-status").value;
+
+  if(!name||!email||!code){toast("Name, Email, and Username are required");return}
+
+  const users=getUsers();
+  const existing=users.find(u=>u.code.toLowerCase()===code.toLowerCase() && u.id!==editingUserId);
+  if(existing){
+    toast("Username already in use! Pick another username.");
+    return;
+  }
+
+  if(editingUserId){
+    const idx=users.findIndex(u=>u.id===editingUserId);
+    if(idx!==-1){
+      users[idx]={...users[idx],name,email,code,role,status};
+      toast(`User ${name} updated!`);
+    }
+    editingUserId=null;
+  } else {
+    const newUser={
+      id:"u_"+Date.now(),
+      name,
+      email,
+      code,
+      role,
+      status,
+      created:today(),
+      progress:{}
+    };
+    users.push(newUser);
+    toast(`Student added! Username is: ${code}`);
+  }
+  persistUsers(users);
+  render();
+}
+
+function editUser(id){
+  editingUserId=id;
+  render();
+}
+
+function cancelEditUser(){
+  editingUserId=null;
+  render();
+}
+
+function deleteUser(id){
+  const users=getUsers();
+  const target=users.find(u=>u.id===id);
+  if(confirm(`Are you sure you want to delete ${target?target.name:'this user'}?`)){
+    const updatedUsers=users.filter(u=>u.id!==id);
+    persistUsers(updatedUsers);
+    if(fbDb && target && target.code){
+      fbDb.collection("users").doc(target.code.toLowerCase()).delete().catch(()=>{});
+    }
+    toast("User deleted!");
+    render();
+  }
+}
+
+function saveFirebaseSettings(){
+  const raw=$("#fbConfigInput")?$("#fbConfigInput").value.trim():"";
+  if(!raw){toast("Please paste your Firebase configuration");return}
+  try {
+    let cfg=null;
+    if(raw.startsWith("{")){
+      cfg=JSON.parse(raw);
+    } else {
+      const cleaned = raw
+        .replace(/const firebaseConfig =/g, "")
+        .replace(/;/g, "")
+        .trim();
+      cfg = (new Function("return " + cleaned))();
+    }
+    if(!cfg || !cfg.apiKey || !cfg.projectId){
+      toast("Invalid Firebase configuration: missing apiKey or projectId");
+      return;
+    }
+    localStorage.setItem(FIREBASE_CONFIG_KEY, JSON.stringify(cfg));
+    toast("Firebase settings saved! Connecting...");
+    initFirebase();
+    persistUsers(getUsers(), true);
+    render();
+  } catch(e){
+    toast("Could not parse configuration. Please paste valid JSON.");
+  }
+}
+
+function disconnectFirebase(){
+  if(confirm("Disconnect Firebase cloud sync and return to local storage mode?")){
+    localStorage.removeItem(FIREBASE_CONFIG_KEY);
+    fbConnected=false;
+    fbDb=null;
+    fbApp=null;
+    toast("Firebase disconnected");
+    render();
+  }
+}
+
+function adminView(){
+  const cu=currentUser();
+  
+  // Guard: Strictly block any non-admin or unauthenticated user
+  if(!cu || cu.role!=='Admin'){
+    return `
+    <div style="max-width:480px;margin:50px auto;text-align:center" class="card">
+      <div style="font-size:3rem;margin-bottom:12px">🚫</div>
+      <h2>Access Denied</h2>
+      <p class="muted" style="margin:10px 0 20px">The Admin Panel is private and reserved strictly for administrator <b>ashu</b>. Students and normal users cannot view or access this section.</p>
+      <div class="row" style="justify-content:center;gap:12px">
+        <a href="#/" class="btn primary">Return to Dashboard</a>
+        <a href="#/login" class="btn">User Account</a>
+      </div>
+    </div>`;
+  }
+
+  const users=getUsers();
+  const editingUser=editingUserId?users.find(u=>u.id===editingUserId):null;
+  const reportingUser=viewingReportUserId?users.find(u=>u.id===viewingReportUserId):null;
+
+  // If viewing a detailed learning report for a student
+  let reportHtml = '';
+  if(reportingUser){
+    const p = reportingUser.progress || {};
+    const doneConcepts = ALL.filter(c => p[c.id] && p[c.id].st >= 2);
+    const learningConcepts = ALL.filter(c => p[c.id] && p[c.id].st === 1);
+    const notesConcepts = ALL.filter(c => p[c.id] && p[c.id].notes && p[c.id].notes.trim().length > 0);
+    const totalTimeSec = ALL.reduce((acc, c) => acc + ((p[c.id] && p[c.id].time) ? p[c.id].time : 0), 0);
+    const totalCards = ALL.reduce((acc, c) => acc + ((p[c.id] && p[c.id].cards) ? p[c.id].cards.length : 0), 0);
+    const pct = ALL.length ? Math.round((doneConcepts.length / ALL.length) * 100) : 0;
+
+    reportHtml = `
+    <div class="card" style="margin-bottom:24px;border:1px solid var(--brand);box-shadow:0 6px 20px rgba(0,0,0,0.15)">
+      <div class="row spread" style="margin-bottom:14px;border-bottom:1px solid var(--line);padding-bottom:12px">
+        <div class="row">
+          <span style="font-size:2.2rem">📊</span>
+          <div>
+            <h2 style="margin:0">Learning Report: ${esc(reportingUser.name)}</h2>
+            <p class="small muted">Passcode: <code>${esc(reportingUser.code)}</code> · Email: ${esc(reportingUser.email)} · Role: <span class="pill ${reportingUser.role==='Admin'?'s3':''}">${esc(reportingUser.role)}</span></p>
+          </div>
+        </div>
+        <button class="btn sm" onclick="closeStudentReport()">✕ Close Report</button>
+      </div>
+
+      <div class="grid g4" style="margin-bottom:18px">
+        <div class="card stat" style="background:var(--surface2)">
+          <span class="muted small">Roadmap Completion</span>
+          <b style="color:var(--brand)">${pct}%</b>
+          <span class="small muted">${doneConcepts.length} / ${ALL.length} topics</span>
+        </div>
+        <div class="card stat" style="background:var(--surface2)">
+          <span class="muted small">In Progress Topics</span>
+          <b>${learningConcepts.length}</b>
+        </div>
+        <div class="card stat" style="background:var(--surface2)">
+          <span class="muted small">Notes & Summaries</span>
+          <b>${notesConcepts.length}</b>
+        </div>
+        <div class="card stat" style="background:var(--surface2)">
+          <span class="muted small">Study Time Logged</span>
+          <b>${Math.round(totalTimeSec/60)} min</b>
+        </div>
+      </div>
+
+      <div class="grid g2" style="align-items:start">
+        <div>
+          <h4>Completed Concepts (${doneConcepts.length})</h4>
+          <div style="max-height:220px;overflow-y:auto;background:var(--surface2);border-radius:8px;padding:8px 12px;margin-top:8px">
+            ${doneConcepts.length ? doneConcepts.map(c=>`
+              <div class="row spread small" style="padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+                <span>✓ <b>${esc(c.name)}</b></span>
+                <span class="muted">Month ${c.m}</span>
+              </div>
+            `).join('') : '<p class="small muted">No topics completed yet.</p>'}
+          </div>
+        </div>
+
+        <div>
+          <h4>Recent Student Notes (${notesConcepts.length})</h4>
+          <div style="max-height:220px;overflow-y:auto;background:var(--surface2);border-radius:8px;padding:8px 12px;margin-top:8px">
+            ${notesConcepts.length ? notesConcepts.map(c=>`
+              <div style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+                <div class="row spread small"><b>${esc(c.name)}</b> <span class="muted">Month ${c.m}</span></div>
+                <div class="small muted" style="margin-top:3px;font-style:italic">"${esc(p[c.id].notes.slice(0, 100))}${p[c.id].notes.length>100?'...':''}"</div>
+              </div>
+            `).join('') : '<p class="small muted">No personal notes taken yet.</p>'}
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  return `
+  <div class="row spread" style="margin-bottom:16px">
+    <div>
+      <h1>Admin Management Panel 🛡️</h1>
+      <p class="muted small">Logged in as Administrator (<b>${esc(cu.name)}</b>). Manage users, passcodes, and monitor real-time student learning reports.</p>
+    </div>
+    <div class="row" style="gap:8px">
+      <a href="#/leaderboard" class="btn sm">View Leaderboard</a>
+      <a href="#/" class="btn sm primary">My Learning Dashboard</a>
+    </div>
+  </div>
+
+  ${reportHtml}
+
+  <div class="grid g3" style="margin-bottom:20px">
+    <div class="card stat"><span class="muted small">Total Users</span><b>${users.length}</b></div>
+    <div class="card stat"><span class="muted small">Active Students</span><b>${users.filter(u=>u.role==='Student'&&u.status==='Active').length}</b></div>
+    <div class="card stat"><span class="muted small">Admin & Staff</span><b>${users.filter(u=>u.role!=='Student').length}</b></div>
+  </div>
+
+  <div class="grid g2" style="align-items:start">
+    <div class="card">
+      <h3>${editingUser?'Edit User Details':'Add New Learner / Student'}</h3>
+      <p class="small muted" style="margin-bottom:12px">${editingUser?'Modify user profile or passcode.':'Generate a student login passcode so they can access their roadmap.'}</p>
+      <form onsubmit="saveUserForm(event)" class="grid">
+        <div>
+          <label class="small muted" style="display:block;margin-bottom:4px">Full Name</label>
+          <input type="text" id="u-name" value="${editingUser?esc(editingUser.name):''}" placeholder="e.g. John Doe" required style="width:100%;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px">
+        </div>
+        <div>
+          <label class="small muted" style="display:block;margin-bottom:4px">Email Address</label>
+          <input type="email" id="u-email" value="${editingUser?esc(editingUser.email):''}" placeholder="student@example.com" required style="width:100%;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px">
+        </div>
+        <div>
+          <label class="small muted" style="display:block;margin-bottom:4px">Student Passcode / Nickname (Used to Login)</label>
+          <input type="text" id="u-code" value="${editingUser?esc(editingUser.code):''}" placeholder="e.g. john99" required style="width:100%;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px">
+        </div>
+        <div class="row" style="gap:12px">
+          <div style="flex:1">
+            <label class="small muted" style="display:block;margin-bottom:4px">Role</label>
+            <select id="u-role">
+              <option value="Student" ${editingUser&&editingUser.role==='Student'?'selected':''}>Student</option>
+              <option value="Instructor" ${editingUser&&editingUser.role==='Instructor'?'selected':''}>Instructor</option>
+              <option value="Admin" ${editingUser&&editingUser.role==='Admin'?'selected':''}>Admin</option>
+            </select>
+          </div>
+          <div style="flex:1">
+            <label class="small muted" style="display:block;margin-bottom:4px">Account Status</label>
+            <select id="u-status">
+              <option value="Active" ${editingUser&&editingUser.status==='Active'?'selected':''}>Active</option>
+              <option value="Inactive" ${editingUser&&editingUser.status==='Inactive'?'selected':''}>Inactive (Block access)</option>
+            </select>
+          </div>
+        </div>
+        <div class="row" style="margin-top:10px;gap:8px">
+          <button type="submit" class="btn primary" style="flex:1">${editingUser?'Save Changes':'Create User'}</button>
+          ${editingUser?`<button type="button" class="btn" onclick="cancelEditUser()">Cancel</button>`:''}
+        </div>
+      </form>
+    </div>
+
+    <div class="card">
+      <div class="row spread" style="margin-bottom:8px">
+        <h3 style="margin:0">Firebase Cloud Sync ☁️</h3>
+        <span class="pill ${fbConnected?'s2':'due'}">${fbConnected?'Connected & Live':'Offline / Local Mode'}</span>
+      </div>
+      <p class="small muted" style="margin-bottom:12px">With Firebase connected, any student you add is saved to the cloud instantly so they can log in on any device directly by entering their username.</p>
+      
+      <div style="background:var(--surface2);border-radius:8px;padding:10px 12px;margin-bottom:12px">
+        <div class="row spread small">
+          <span><b>Sync Status:</b></span>
+          <span style="color:${fbConnected?'var(--ok)':'var(--warn)'}">${fbConnected?'✓ Syncing live across all devices':'Using Local Storage + 1-Click Invite Links'}</span>
+        </div>
+      </div>
+
+      <details style="margin-top:8px">
+        <summary class="small" style="cursor:pointer;color:var(--brand);font-weight:600">⚙️ ${fbConnected?'Update Firebase Credentials':'Connect Your Free Firebase Database'}</summary>
+        <div class="grid" style="margin-top:10px;gap:8px">
+          <p class="small muted">Paste your Firebase Project Web Configuration (JSON or properties):</p>
+          <textarea id="fbConfigInput" rows="5" placeholder='{\n  "apiKey": "AIzaSy...",\n  "projectId": "your-app-id",\n  "appId": "1:..."\n}' style="width:100%;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:8px;font-family:var(--f-mono);font-size:.8rem"></textarea>
+          <div class="row" style="gap:8px">
+            <button class="btn sm primary" onclick="saveFirebaseSettings()">Connect & Save</button>
+            ${fbConnected?`<button class="btn sm danger" onclick="disconnectFirebase()">Disconnect</button>`:''}
+          </div>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <h2 style="margin:28px 0 14px">All Registered Users & Learning Reports (${users.length})</h2>
+  <div class="card">
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Learner Name</th>
+            <th>Passcode</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th>Progress</th>
+            <th style="text-align:right">Actions & Reports</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${users.map(u=>{
+            const p = u.progress || {};
+            const done = ALL.filter(c => p[c.id] && p[c.id].st >= 2).length;
+            const pct = ALL.length ? Math.round((done / ALL.length) * 100) : 0;
+            return `
+            <tr>
+              <td><b>${esc(u.name)}</b></td>
+              <td><code>${esc(u.code)}</code></td>
+              <td><span class="small muted">${esc(u.email)}</span></td>
+              <td><span class="pill ${u.role==='Admin'?'s3':u.role==='Instructor'?'s1':''}">${esc(u.role)}</span></td>
+              <td><span class="pill ${u.status==='Active'?'s2':'due'}">${esc(u.status)}</span></td>
+              <td>
+                <div class="row" style="gap:6px">
+                  <div style="flex:1;min-width:60px;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden">
+                    <div style="width:${pct}%;height:100%;background:var(--brand)"></div>
+                  </div>
+                  <span class="small"><b>${pct}%</b></span>
+                </div>
+              </td>
+              <td style="text-align:right;white-space:nowrap">
+                <button class="btn sm" onclick="copyInviteLink('${u.id}')" title="Copy direct login link to send to student">🔗 Link</button>
+                <button class="btn sm" onclick="openStudentReport('${u.id}')" title="Inspect report">📊 Report</button>
+                <button class="btn sm" onclick="editUser('${u.id}')">Edit</button>
+                ${u.code.toLowerCase()!=='ashu' ? `<button class="btn sm danger" onclick="deleteUser('${u.id}')">Delete</button>` : ''}
+              </td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+/* ===== Student Leaderboard View ===== */
+function leaderboardView(){
+  const users=getUsers();
+  const cu=currentUser();
+
+  // compute statistics for each registered user
+  const ranked = users.map(u=>{
+    const p = u.progress || {};
+    const doneCount = ALL.filter(c => p[c.id] && p[c.id].st >= 2).length;
+    const pct = ALL.length ? Math.round((doneCount / ALL.length) * 100) : 0;
+    const notesCount = ALL.filter(c => p[c.id] && p[c.id].notes && p[c.id].notes.trim().length > 0).length;
+    const cardsCount = ALL.reduce((acc, c) => acc + ((p[c.id] && p[c.id].cards) ? p[c.id].cards.length : 0), 0);
+    const totalTimeSec = ALL.reduce((acc, c) => acc + ((p[c.id] && p[c.id].time) ? p[c.id].time : 0), 0);
+
+    return {
+      ...u,
+      doneCount,
+      pct,
+      notesCount,
+      cardsCount,
+      totalTimeSec
+    };
+  }).sort((a,b) => {
+    if(b.pct !== a.pct) return b.pct - a.pct;
+    if(b.notesCount !== a.notesCount) return b.notesCount - a.notesCount;
+    return b.cardsCount - a.cardsCount;
+  });
+
+  const medals = ["🥇","🥈","🥉"];
+
+  return `
+  <div class="row spread" style="margin-bottom:16px">
+    <div>
+      <h1>Student Leaderboard 🏆</h1>
+      <p class="muted small">Real-time ranking based on completed roadmap concepts, study time, and active note-taking.</p>
+    </div>
+  </div>
+
+  <div class="grid g3" style="margin-bottom:20px">
+    <div class="card stat"><span class="muted small">Total Registered Students</span><b>${users.length}</b></div>
+    <div class="card stat"><span class="muted small">Top Completion Rate</span><b>${ranked.length ? ranked[0].pct : 0}%</b></div>
+    <div class="card stat"><span class="muted small">Your Rank</span><b>${cu ? '#' + (ranked.findIndex(u=>u.code.toLowerCase()===cu.code.toLowerCase()) + 1) : '—'}</b></div>
+  </div>
+
+  <div class="card">
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:50px">Rank</th>
+            <th>Student / User</th>
+            <th>Role</th>
+            <th>Concepts Completed</th>
+            <th>Progress Bar</th>
+            <th>Notes & Cards</th>
+            <th style="text-align:right">Time Studied</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${ranked.map((u, i) => {
+            const isMe = cu && u.code.toLowerCase() === cu.code.toLowerCase();
+            const rankLabel = i < 3 ? medals[i] : `#${i + 1}`;
+            return `
+            <tr style="${isMe ? 'background:var(--surface2);font-weight:600' : ''}">
+              <td style="font-size:1.2rem;text-align:center">${rankLabel}</td>
+              <td>
+                <b>${esc(u.name)}</b> ${isMe ? '<span class="pill s2">You</span>' : ''}
+                <div class="small muted">Code: <code>${esc(u.code)}</code></div>
+              </td>
+              <td><span class="pill ${u.role==='Admin'?'s3':u.role==='Instructor'?'s1':''}">${esc(u.role)}</span></td>
+              <td><b>${u.doneCount}</b> / ${ALL.length} concepts (${u.pct}%)</td>
+              <td style="min-width:140px">
+                <div class="bar" style="height:8px;margin-top:6px"><i style="width:${u.pct}%"></i></div>
+              </td>
+              <td class="small">
+                📝 ${u.notesCount} notes · 🎴 ${u.cardsCount} cards
+              </td>
+              <td style="text-align:right" class="small muted">${hm(u.totalTimeSec)}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+/* palette */
+let PAL=null;
+function palette(){
+  if(PAL){closePal();return}
+  const d=document.createElement("div");d.id="palwrap";
+  d.innerHTML=`<div class="scrim" style="z-index:59" onclick="closePal()"></div><div class="pal" role="dialog" aria-label="Search"><input id="pq" type="text" placeholder="Search concepts, descriptions, and your notes" autocomplete="off"><ul id="pr" role="listbox"></ul></div>`;
+  document.body.appendChild(d);PAL={sel:0,res:[]};
+  const q=$("#pq");q.focus();q.addEventListener("input",palSearch);
+  q.addEventListener("keydown",e=>{
+    if(e.key==="ArrowDown"){PAL.sel=Math.min(PAL.sel+1,PAL.res.length-1);palDraw();e.preventDefault()}
+    else if(e.key==="ArrowUp"){PAL.sel=Math.max(PAL.sel-1,0);palDraw();e.preventDefault()}
+    else if(e.key==="Enter"){const r=PAL.res[PAL.sel];if(r){closePal();openC(r.id)}}
+  });palSearch();
+}
+function closePal(){const e=$("#palwrap");if(e)e.remove();PAL=null}
+function palSearch(){
+  const q=$("#pq").value.toLowerCase().trim();
+  PAL.res=(q?ALL.filter(c=>{const r=R_(c.id);return c.name.toLowerCase().includes(q)||c.learn.toLowerCase().includes(q)||r.notes.toLowerCase().includes(q)||r.own.toLowerCase().includes(q)}):ALL.filter(c=>R_(c.id).due&&R_(c.id).due<=today()&&R_(c.id).st>=2)).slice(0,30);
+  PAL.sel=0;palDraw();
+}
+function palDraw(){
+  $("#pr").innerHTML=PAL.res.length?PAL.res.map((c,i)=>`<li role="option" aria-selected="${i===PAL.sel}" onclick="closePal();openC('${c.id}')"><b>${esc(c.name)}</b> <span class="small muted">Month ${c.m} · ${esc(c.topic)}</span></li>`).join(""):`<li class="muted small">${$("#pq").value?"No matches. Try a different word.":"Type to search. Concepts due for review show here."}</li>`;
+}
+
+/* ===== render + boot ===== */
+function render(){
+  const r=route(),host=$("#main");let h="";
+  const cu=currentUser();
+  const appEl=$(".app");
+  
+  if(!cu){
+    h=loginView();
+    if(appEl) appEl.classList.add("no-side");
+  } else {
+    if(appEl) appEl.classList.remove("no-side");
+    if(r.p==="home")h=homeView();
+    else if(r.p==="month")h=monthView(r.n);
+    else if(r.p==="python")h=pythonView();
+    else if(r.p==="revision")h=revisionView();
+    else if(r.p==="skills")h=skillsView();
+    else if(r.p==="analytics")h=analyticsView();
+    else if(r.p==="leaderboard")h=leaderboardView();
+    else if(r.p==="admin")h=adminView();
+    else if(r.p==="login")h=loginView();
+    else h=dataView();
+  }
+
+  const sy=window.scrollY;const open=[...document.querySelectorAll("details.topic")].map(d=>d.open);
+  host.innerHTML=h;
+  if(r.p==="month"&&open.length&&host.dataset.r===location.hash){document.querySelectorAll("details.topic").forEach((d,i)=>{if(open[i]!==undefined)d.open=open[i]})}
+  host.dataset.r=location.hash;
+  saveActiveUserProgress();
+  if(cu){
+    sidebar();
+  }
+}
+window.addEventListener("hashchange",()=>{$("#side").classList.remove("open");window.scrollTo(0,0);Rv.idx=0;Rv.flip=false;resetStep=0;render()});
+document.addEventListener("keydown",e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="k"){e.preventDefault();palette();return}
+  if(e.key==="Escape"){if(PAL)closePal();else if(openId)closeC();return}
+  const tg=e.target.tagName;if(["INPUT","TEXTAREA","SELECT"].includes(tg)||e.metaKey||e.ctrlKey||e.altKey)return;
+  if(openId){
+    if(e.key==="j"){nav(1)}else if(e.key==="k"){nav(-1)}
+    else if(e.key===" "){e.preventDefault();toggleDone(openId)}
+    else if(e.key==="n"){e.preventDefault();if(PV){PV=false;drawer()}const t=$("#notes");if(t)t.focus()}
+    return;
+  }
+  const r=route();
+  if(r.p==="revision"){
+    if(e.key===" "){e.preventDefault();Rv.flip=!Rv.flip;render()}
+    else if("1234".includes(e.key)&&Rv.flip){const g=+e.key-1;
+      if(Rv.tab==="concepts"){const d=dueList();if(d.length)rate(d[Math.min(Rv.idx,d.length-1)].id,g)}
+      else{const d=dueCards();if(d.length){const x=d[Math.min(Rv.idx,d.length-1)];rateCard(x.id,x.i,g)}}}
+  }
+});
+window.addEventListener("storage",e=>{
+  if(e.key===USERS_DB_KEY || e.key===KEY){
+    S = load();
+    getUsers();
+    render();
+  }
+});
+window.addEventListener("beforeunload",timerStop);
+applyTheme();
+initFirebase();
+checkUrlInviteAndAutoLogin();
+render();
+</script></body></html>
