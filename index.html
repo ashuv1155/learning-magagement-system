@@ -2196,10 +2196,13 @@ function adminView(){
 
 /* ===== Student Leaderboard View ===== */
 function leaderboardView(){
-  const users=getUsers();
+  const allUsers=getUsers();
   const cu=currentUser();
 
-  // compute statistics for each registered user
+  // Exclude Admin from student rankings
+  const users = allUsers.filter(u => u.role !== 'Admin' && u.code.toLowerCase() !== 'ashu');
+
+  // compute statistics for each registered student
   const ranked = users.map(u=>{
     const p = u.progress || {};
     const doneCount = ALL.filter(c => p[c.id] && p[c.id].st >= 2).length;
@@ -2223,6 +2226,7 @@ function leaderboardView(){
   });
 
   const medals = ["🥇","🥈","🥉"];
+  const myRankIndex = cu ? ranked.findIndex(u=>u.code.toLowerCase()===cu.code.toLowerCase()) : -1;
 
   return `
   <div class="row spread" style="margin-bottom:16px">
@@ -2233,9 +2237,9 @@ function leaderboardView(){
   </div>
 
   <div class="grid g3" style="margin-bottom:20px">
-    <div class="card stat"><span class="muted small">Total Registered Students</span><b>${users.length}</b></div>
+    <div class="card stat"><span class="muted small">Total Active Students</span><b>${users.length}</b></div>
     <div class="card stat"><span class="muted small">Top Completion Rate</span><b>${ranked.length ? ranked[0].pct : 0}%</b></div>
-    <div class="card stat"><span class="muted small">Your Rank</span><b>${cu ? '#' + (ranked.findIndex(u=>u.code.toLowerCase()===cu.code.toLowerCase()) + 1) : '—'}</b></div>
+    <div class="card stat"><span class="muted small">Your Rank</span><b>${myRankIndex !== -1 ? '#' + (myRankIndex + 1) : (cu && cu.role === 'Admin' ? 'Admin (Exempt)' : '—')}</b></div>
   </div>
 
   <div class="card">
